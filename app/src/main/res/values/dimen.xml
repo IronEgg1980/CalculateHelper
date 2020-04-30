@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="Height_Toolbar">56dp</dimen>
+    <dimen name="Height_Item_PersonManage">64dp</dimen>
+    <dimen name="Height_Item_ItemManage">48dp</dimen>
+
+    <dimen name="TextSize_XXL">40sp</dimen>
+    <dimen name="TextSize_XL">24sp</dimen>
+    <dimen name="TextSize_L">20sp</dimen>
+    <dimen name="TextSize_M">16sp</dimen>
+    <dimen name="TextSize_S">12sp</dimen>
+</resources>

@@ -1,0 +1,151 @@
+package yzw.ahaqth.calculatehelper.views;
+
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.Gravity;
+import android.view.View;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.List;
+
+import yzw.ahaqth.calculatehelper.R;
+import yzw.ahaqth.calculatehelper.manager.ItemDbManager;
+import yzw.ahaqth.calculatehelper.moduls.Item;
+import yzw.ahaqth.calculatehelper.views.adapters.ItemListAdapter;
+import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
+import yzw.ahaqth.calculatehelper.views.dialogs.SingleEditTextDialog;
+import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
+import yzw.ahaqth.calculatehelper.views.interfaces.ItemClickListener;
+
+public class ItemManageActivity extends AppCompatActivity {
+    private RecyclerView recyclerView;
+    private List<Item> itemList;
+    private ItemListAdapter adapter;
+    private ItemDbManager dbManager;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.toolbar_recyclerview_layout);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle("项目管理");
+        setSupportActionBar(toolbar);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+        dbManager = new ItemDbManager(this);
+        itemList = dbManager.findAll();
+        adapter = new ItemListAdapter(itemList);
+        adapter.setAddButtonClicker(new ItemClickListener() {
+            @Override
+            public void onClick(int position, Object... values) {
+                add(position);
+            }
+        });
+        adapter.setItemClickListener(new ItemClickListener() {
+            @Override
+            public void onClick(int position, Object... values) {
+                itemClick(position, (Integer) values[0]);
+            }
+        });
+        recyclerView = findViewById(R.id.recyclerview);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
+        recyclerView.addItemDecoration(new MyDivideItemDecoration());
+    }
+
+    private void add(final int position) {
+        final SingleEditTextDialog dialog = new SingleEditTextDialog(this);
+        dialog.setDialogCallback(new DialogCallback() {
+            @Override
+            public void onDismiss(boolean confirmFlag, Object... values) {
+                String s = (String) values[0];
+                if (TextUtils.isEmpty(s)) {
+                    dialog.showError("请输入名称！");
+                    return;
+                }
+                if (dbManager.isExist(s)) {
+                    dialog.showError("已存在该项目，请改名！");
+                    return;
+                }
+                add(position, s);
+                dialog.dismiss();
+            }
+        });
+        dialog.showAtLocation(recyclerView, Gravity.BOTTOM, 0, 0);
+        dialog.setTitle("新增项目");
+        dialog.setHint("请输入名称");
+        dialog.setIco(getResources().getDrawable(R.drawable.additem,null));
+    }
+
+    private void edit(final int position) {
+        final Item item = itemList.get(position);
+        final SingleEditTextDialog dialog = new SingleEditTextDialog(this);
+        dialog.setDialogCallback(new DialogCallback() {
+            @Override
+            public void onDismiss(boolean confirmFlag, Object... values) {
+                String s = (String) values[0];
+                if (TextUtils.isEmpty(s)) {
+                    dialog.showError("请输入名称！");
+                    return;
+                }
+                if (!item.getName().equals(s)) {
+                    if (dbManager.isExist(s)) {
+                        dialog.showError("已存在该项目，请改名！");
+                        return;
+                    }
+                    item.setName(s);
+                    dbManager.update(item);
+                    adapter.notifyItemChanged(position);
+                }
+                dialog.dismiss();
+            }
+        });
+        dialog.showAtLocation(recyclerView, Gravity.BOTTOM, 0, 0);
+        dialog.setTitle("修改信息");
+        dialog.setIco(getResources().getDrawable(R.drawable.edit,null));
+        dialog.setEditText(item.getName());
+    }
+
+    private void add(int position, String name) {
+        Item item = new Item();
+        item.setName(name);
+        dbManager.save(item);
+        itemList.add(item);
+        adapter.notifyItemRangeChanged(position, 2);
+        recyclerView.smoothScrollToPosition(position + 1);
+    }
+
+    private void dele(int position){
+        Item item = itemList.get(position);
+        dbManager.dele(item);
+        itemList.remove(position);
+        adapter.notifyItemRemoved(position);
+    }
+
+    private void itemClick(final int position, int id) {
+        if (id == R.id.edit) {
+            edit(position);
+        } else {
+            DialogFactory dialogFactory = DialogFactory.getConfirmDialog("请确认",
+                    "是否删除 【"+itemList.get(position).getName()+"】 ？",
+                    R.drawable.warnning);
+            dialogFactory.setDialogCallback(new DialogCallback() {
+                @Override
+                public void onDismiss(boolean confirmFlag, Object... values) {
+                    if(confirmFlag){
+                        dele(position);
+                    }
+                }
+            });
+            dialogFactory.show(getSupportFragmentManager(),"dele");
+        }
+    }
+}
