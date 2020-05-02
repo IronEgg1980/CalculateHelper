@@ -19,7 +19,7 @@ public class BaseViewHolder extends RecyclerView.ViewHolder {
         this.itemView.setLongClickable(true);
     }
 
-    private  <T extends View> T getView(int id){
+    public   <T extends View> T getView(int id){
         View view = views.get(id);
         if(view == null){
             view = itemView.findViewById(id);

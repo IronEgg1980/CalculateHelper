@@ -3,7 +3,10 @@ package yzw.ahaqth.calculatehelper.moduls;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class Item extends BaseModul {
+import yzw.ahaqth.calculatehelper.views.adapters.ItemViewTypeSupport;
+import yzw.ahaqth.calculatehelper.views.adapters.MultiTypeModul;
+
+public class Item extends BaseModul implements MultiTypeModul {
     private String name = "";
 
     public boolean isFocused = false;
@@ -34,5 +37,10 @@ public class Item extends BaseModul {
         if(obj instanceof Item)
             return this.name.equals(((Item) obj).getName());
         return false;
+    }
+
+    @Override
+    public int getItemViewType() {
+        return ItemViewTypeSupport.TYPE_ITEM;
     }
 }

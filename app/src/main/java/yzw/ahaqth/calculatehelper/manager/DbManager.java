@@ -209,12 +209,12 @@ public abstract class DbManager<T extends BaseModul> {
         database.close();
     }
 
-    public void update(T modified) {
-        SQLiteDatabase database = dbHelper.getWritableDatabase();
-        ContentValues contentValues = modul2ContentValues(modified);
-        database.update(tableName, contentValues, "id = ?", new String[]{String.valueOf(modified.getId())});
-        database.close();
-    }
+//    public void update(T modified) {
+//        SQLiteDatabase database = dbHelper.getWritableDatabase();
+//        ContentValues contentValues = modul2ContentValues(modified);
+//        database.update(tableName, contentValues, "id = ?", new String[]{String.valueOf(modified.getId())});
+//        database.close();
+//    }
 
     public void update(T newT,String whereClause, String...conditions) {
         SQLiteDatabase database = dbHelper.getWritableDatabase();
@@ -225,7 +225,7 @@ public abstract class DbManager<T extends BaseModul> {
 
     public void saveOrUpdate(T t){
         if(isExist(t)){
-            update(t);
+            update(t,"id = ?", String.valueOf(t.getId()));
         }else{
             save(t);
         }

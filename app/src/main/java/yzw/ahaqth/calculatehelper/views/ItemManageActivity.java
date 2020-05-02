@@ -7,25 +7,29 @@ import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.mcxtzhang.swipemenulib.SwipeMenuLayout;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import yzw.ahaqth.calculatehelper.R;
 import yzw.ahaqth.calculatehelper.manager.ItemDbManager;
 import yzw.ahaqth.calculatehelper.moduls.Item;
-import yzw.ahaqth.calculatehelper.views.adapters.ItemListAdapter;
+import yzw.ahaqth.calculatehelper.views.adapters.ItemViewTypeSupport;
+import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
+import yzw.ahaqth.calculatehelper.views.adapters.MultiTypeAdapter;
+import yzw.ahaqth.calculatehelper.views.adapters.MultiTypeModul;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
 import yzw.ahaqth.calculatehelper.views.dialogs.SingleEditTextDialog;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
-import yzw.ahaqth.calculatehelper.views.interfaces.ItemClickListener;
 
 public class ItemManageActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
-    private List<Item> itemList;
-    private ItemListAdapter adapter;
+    private List<MultiTypeModul> itemList;
+    private MultiTypeAdapter adapter;
     private ItemDbManager dbManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,24 +45,63 @@ public class ItemManageActivity extends AppCompatActivity {
             }
         });
         dbManager = new ItemDbManager(this);
-        itemList = dbManager.findAll();
-        adapter = new ItemListAdapter(itemList);
-        adapter.setAddButtonClicker(new ItemClickListener() {
+
+        generateData();
+
+        adapter = new MultiTypeAdapter(itemList) {
             @Override
-            public void onClick(int position, Object... values) {
-                add(position);
+            public void bindData(final BaseViewHolder baseViewHolder, MultiTypeModul data) {
+                if(data.getItemViewType() == ItemViewTypeSupport.TYPE_ITEM_BUTTON){
+                    baseViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            add(baseViewHolder.getAdapterPosition());
+                        }
+                    });
+                }else if(data.getItemViewType() == ItemViewTypeSupport.TYPE_ITEM){
+                    final Item item = (Item) data;
+                    final SwipeMenuLayout menuLayout = baseViewHolder.getView(R.id.swipemenulayout);
+                    baseViewHolder.setText(R.id.nameTextView,item.getName());
+                    baseViewHolder.getView(R.id.root).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            menuLayout.smoothExpand();
+                        }
+                    });
+                    baseViewHolder.getView(R.id.dele).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            menuLayout.smoothClose();
+                            dele(baseViewHolder.getAdapterPosition());
+                        }
+                    });
+                    baseViewHolder.getView(R.id.edit).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            menuLayout.smoothClose();
+                            edit(baseViewHolder.getAdapterPosition());
+                        }
+                    });
+
+                }
             }
-        });
-        adapter.setItemClickListener(new ItemClickListener() {
-            @Override
-            public void onClick(int position, Object... values) {
-                itemClick(position, (Integer) values[0]);
-            }
-        });
+        };
         recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
         recyclerView.addItemDecoration(new MyDivideItemDecoration());
+    }
+
+    private void generateData(){
+        List<Item> items = dbManager.findAll();
+        itemList = new ArrayList<>();
+        itemList.addAll(items);
+        itemList.add(new MultiTypeModul() {
+            @Override
+            public int getItemViewType() {
+                return ItemViewTypeSupport.TYPE_ITEM_BUTTON;
+            }
+        });
     }
 
     private void add(final int position) {
@@ -75,8 +118,15 @@ public class ItemManageActivity extends AppCompatActivity {
                     dialog.showError("已存在该项目，请改名！");
                     return;
                 }
-                add(position, s);
+
+                Item item = new Item();
+                item.setName(s);
+                dbManager.save(item);
+                itemList.add(position, item);
+
                 dialog.dismiss();
+                adapter.notifyItemRangeChanged(position, 2);
+                recyclerView.smoothScrollToPosition(position + 1);
             }
         });
         dialog.showAtLocation(recyclerView, Gravity.BOTTOM, 0, 0);
@@ -86,23 +136,24 @@ public class ItemManageActivity extends AppCompatActivity {
     }
 
     private void edit(final int position) {
-        final Item item = itemList.get(position);
+        final Item item = (Item) itemList.get(position);
         final SingleEditTextDialog dialog = new SingleEditTextDialog(this);
         dialog.setDialogCallback(new DialogCallback() {
             @Override
             public void onDismiss(boolean confirmFlag, Object... values) {
                 String s = (String) values[0];
+                String oldValue = item.getName();
                 if (TextUtils.isEmpty(s)) {
                     dialog.showError("请输入名称！");
                     return;
                 }
-                if (!item.getName().equals(s)) {
+                if (!oldValue.equals(s)) {
                     if (dbManager.isExist(s)) {
                         dialog.showError("已存在该项目，请改名！");
                         return;
                     }
                     item.setName(s);
-                    dbManager.update(item);
+                    dbManager.update(item,"name = ?",oldValue);
                     adapter.notifyItemChanged(position);
                 }
                 dialog.dismiss();
@@ -114,38 +165,21 @@ public class ItemManageActivity extends AppCompatActivity {
         dialog.setEditText(item.getName());
     }
 
-    private void add(int position, String name) {
-        Item item = new Item();
-        item.setName(name);
-        dbManager.save(item);
-        itemList.add(item);
-        adapter.notifyItemRangeChanged(position, 2);
-        recyclerView.smoothScrollToPosition(position + 1);
-    }
-
-    private void dele(int position){
-        Item item = itemList.get(position);
-        dbManager.dele(item);
-        itemList.remove(position);
-        adapter.notifyItemRemoved(position);
-    }
-
-    private void itemClick(final int position, int id) {
-        if (id == R.id.edit) {
-            edit(position);
-        } else {
-            DialogFactory dialogFactory = DialogFactory.getConfirmDialog("请确认",
-                    "是否删除 【"+itemList.get(position).getName()+"】 ？",
-                    R.drawable.warnning);
-            dialogFactory.setDialogCallback(new DialogCallback() {
-                @Override
-                public void onDismiss(boolean confirmFlag, Object... values) {
-                    if(confirmFlag){
-                        dele(position);
-                    }
+    private void dele(final int position){
+        final Item item = (Item) itemList.get(position);
+        DialogFactory dialogFactory = DialogFactory.getConfirmDialog("请确认",
+                "是否删除 【"+item.getName()+"】 ？",
+                R.drawable.warnning);
+        dialogFactory.setDialogCallback(new DialogCallback() {
+            @Override
+            public void onDismiss(boolean confirmFlag, Object... values) {
+                if(confirmFlag){
+                    dbManager.dele(item);
+                    itemList.remove(position);
+                    adapter.notifyItemRemoved(position);
                 }
-            });
-            dialogFactory.show(getSupportFragmentManager(),"dele");
-        }
+            }
+        });
+        dialogFactory.show(getSupportFragmentManager(),"dele");
     }
 }

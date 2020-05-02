@@ -3,12 +3,14 @@ package yzw.ahaqth.calculatehelper.moduls;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class Person extends BaseModul{
+import yzw.ahaqth.calculatehelper.views.adapters.ItemViewTypeSupport;
+import yzw.ahaqth.calculatehelper.views.adapters.MultiTypeModul;
+
+public class Person extends BaseModul implements MultiTypeModul {
     private String name = "";
 
     public float assignRatio = 1.0f;
     public boolean isSelected = false;
-
 
     public String getName() {
         return name;
@@ -37,5 +39,10 @@ public class Person extends BaseModul{
             return this.name.equals(((Person) obj).getName());
         }
         return false;
+    }
+
+    @Override
+    public int getItemViewType() {
+        return ItemViewTypeSupport.TYPE_PERSON;
     }
 }

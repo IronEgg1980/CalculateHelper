@@ -30,11 +30,6 @@ public class RemainDbManager extends DbManager<Remain> {
     }
 
     @Override
-    public void update(Remain modified) {
-        this.saveOrUpdate(modified);
-    }
-
-    @Override
     public void update(Remain newT, String whereClause, String... conditions) {
     }
 

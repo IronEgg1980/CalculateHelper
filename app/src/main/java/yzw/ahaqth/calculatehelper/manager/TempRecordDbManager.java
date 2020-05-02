@@ -30,11 +30,6 @@ public class TempRecordDbManager extends DbManager<TempRecord> {
     }
 
     @Override
-    public void update(TempRecord modified) {
-        this.saveOrUpdate(modified);
-    }
-
-    @Override
     public void update(TempRecord newT, String whereClause, String... conditions) {
     }
 
