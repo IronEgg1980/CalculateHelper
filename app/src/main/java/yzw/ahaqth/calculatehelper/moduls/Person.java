@@ -9,8 +9,11 @@ import yzw.ahaqth.calculatehelper.views.adapters.MultiTypeModul;
 public class Person extends BaseModul implements MultiTypeModul {
     private String name = "";
 
-    public float assignRatio = 1.0f;
+    public double assignRatio = 1.0f;
     public boolean isSelected = false;
+    public double assignAmout = 0;
+    public double totalAmount = 0;
+    public double offDays = 0;
 
     public String getName() {
         return name;

@@ -8,6 +8,8 @@ public class ItemViewTypeSupport {
     public static final int TYPE_PERSON = 2;
     public static final int TYPE_PERSON_BUTTON = 3;
     public static final int TYPE_RECORD = 4;
+    public static final int TYPE_MONTH = 5;
+    public static final int TYPE_MONTH_ADDBUTTON = 6;
 
     public static int getLayoutId(int viewType){
         int layoutId = -1;
@@ -23,6 +25,12 @@ public class ItemViewTypeSupport {
                 break;
             case TYPE_PERSON:
                 layoutId = R.layout.item_person_list;
+                break;
+            case TYPE_MONTH:
+                layoutId = R.layout.select_month_item;
+                break;
+            case TYPE_MONTH_ADDBUTTON:
+                layoutId = R.layout.select_month_item_addbutton;
                 break;
         }
         return layoutId;

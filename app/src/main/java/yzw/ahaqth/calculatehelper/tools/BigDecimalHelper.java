@@ -36,6 +36,10 @@ public class BigDecimalHelper {
         return round(multiply(d1,d2),flag);
     }
 
+    public static double multiplyOnFloor(double d1,double d2){
+        return getBigDecimal(d1).multiply(getBigDecimal(d2)).setScale(0,RoundingMode.FLOOR).doubleValue();
+    }
+
     public static double divide(double d1,double d2){
         return divide(d1,d2,6);
     }

@@ -5,6 +5,8 @@ import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 
+import com.mcxtzhang.swipemenulib.SwipeMenuLayout;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -49,7 +51,6 @@ public class PersonManageActivity extends AppCompatActivity {
         adapter = new MultiTypeAdapter(personList) {
             @Override
             public void bindData(final BaseViewHolder baseViewHolder, MultiTypeModul data) {
-                Person person = (Person) data;
                 if (data.getItemViewType() == ItemViewTypeSupport.TYPE_PERSON_BUTTON) {
                     baseViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -58,16 +59,20 @@ public class PersonManageActivity extends AppCompatActivity {
                         }
                     });
                 } else if (data.getItemViewType() == ItemViewTypeSupport.TYPE_PERSON) {
+                    Person person = (Person) data;
+                    final SwipeMenuLayout menuLayout = baseViewHolder.getView(R.id.swipemenulayout);
                     baseViewHolder.setText(R.id.item_person_list_name,person.getName());
                     baseViewHolder.getView(R.id.edit).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
+                            menuLayout.smoothClose();
                             editPerson(baseViewHolder.getAdapterPosition());
                         }
                     });
                     baseViewHolder.getView(R.id.dele).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
+                            menuLayout.smoothClose();
                             delePerson(baseViewHolder.getAdapterPosition());
                         }
                     });
@@ -149,7 +154,7 @@ public class PersonManageActivity extends AppCompatActivity {
         Person person = new Person();
         person.setName(name);
         dbManager.save(person);
-        personList.add(person);
+        personList.add(position,person);
         adapter.notifyItemRangeChanged(position, 2);
         recyclerView.smoothScrollToPosition(position + 1);
 
