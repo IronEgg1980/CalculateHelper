@@ -3,7 +3,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/textview"
     android:layout_margin="8dp"
-    android:background="@drawable/select_month_item_shape"
     android:textSize="@dimen/TextSize_M"
     android:text="更多月份..."
     android:gravity="center"

@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import java.util.List;
 
 import yzw.ahaqth.calculatehelper.moduls.Remain;
+import yzw.ahaqth.calculatehelper.tools.BigDecimalHelper;
 
 public class RemainDbManager extends DbManager<Remain> {
     public RemainDbManager(Context context) {
@@ -37,7 +38,7 @@ public class RemainDbManager extends DbManager<Remain> {
     public void saveOrUpdate(Remain remain) {
         ContentValues contentValues = modul2ContentValues(remain);
         if (contentValues != null) {
-            if(isExist(remain)) {
+            if(isExist()) {
                 SQLiteDatabase database = dbHelper.getWritableDatabase();
                 database.update(tableName, contentValues, null, null);
                 database.close();
@@ -49,9 +50,22 @@ public class RemainDbManager extends DbManager<Remain> {
         }
     }
 
+    public Remain findOne(){
+        List<Remain> remains = findAll();
+        if(remains.isEmpty())
+            return new Remain();
+        return remains.get(0);
+    }
+
+    public void addRemainValue(double value){
+        Remain remain = findOne();
+        remain.setAmount(BigDecimalHelper.add(remain.getAmount(),value));
+        saveOrUpdate(remain);
+    }
+
     @Override
     public boolean isExist(Remain remain) {
-        return (!findAll().isEmpty());
+        return isExist();
     }
 
     public boolean isExist() {

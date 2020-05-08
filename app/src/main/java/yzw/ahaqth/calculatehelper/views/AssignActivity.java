@@ -1,6 +1,8 @@
 package yzw.ahaqth.calculatehelper.views;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -8,29 +10,38 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatToggleButton;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import yzw.ahaqth.calculatehelper.R;
+import yzw.ahaqth.calculatehelper.manager.AssignDetailsDbManager;
 import yzw.ahaqth.calculatehelper.manager.PersonDbManager;
+import yzw.ahaqth.calculatehelper.manager.RecordDetailsDbManager;
+import yzw.ahaqth.calculatehelper.manager.RemainDbManager;
 import yzw.ahaqth.calculatehelper.moduls.AssignDetails;
 import yzw.ahaqth.calculatehelper.moduls.Person;
 import yzw.ahaqth.calculatehelper.moduls.RecorDetailsGroupByMonth;
+import yzw.ahaqth.calculatehelper.moduls.Remain;
 import yzw.ahaqth.calculatehelper.tools.BigDecimalHelper;
 import yzw.ahaqth.calculatehelper.tools.DateUtils;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseAdapter;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
 import yzw.ahaqth.calculatehelper.views.dialogs.InputNumberDialog;
+import yzw.ahaqth.calculatehelper.views.dialogs.ToastFactory;
+import yzw.ahaqth.calculatehelper.views.interfaces.DataMode;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
 public class AssignActivity extends AppCompatActivity {
+    private LocalDateTime recordTime;
     private RecyclerView recyclerView1;
     private AppCompatToggleButton autoAssignTB;
     private RelativeLayout bottomGroup;
@@ -39,12 +50,14 @@ public class AssignActivity extends AppCompatActivity {
     private BaseAdapter<RecorDetailsGroupByMonth> recordDetailsAdapter;
     private List<Person> personList;
     private BaseAdapter<Person> personAdapter;
-    private int currentIndex,maxDay = 30;
+    private int currentIndex, maxDay = 30;
+    private RecordDetailsDbManager recordDetailsDbManager;
 
     private void initial() {
         this.currentIndex = -1;
         this.personList = new PersonDbManager(this).findAll();
-
+        this.recordDetailsDbManager = new RecordDetailsDbManager(this);
+        this.recordDetailsGroupByMonthList = recordDetailsDbManager.getRecordGroupByMonthList(recordTime, DataMode.UNASSIGNED);
         this.recordDetailsAdapter = new BaseAdapter<RecorDetailsGroupByMonth>(R.layout.assign_recorddetailslist_item, recordDetailsGroupByMonthList) {
             @Override
             public void bindData(final BaseViewHolder baseViewHolder, final RecorDetailsGroupByMonth data) {
@@ -67,12 +80,12 @@ public class AssignActivity extends AppCompatActivity {
                 baseViewHolder.setText(R.id.nameTextView, data.getName());
                 baseViewHolder.setText(R.id.assignAmountTextView, "当前分配：" + data.assignAmout);
                 baseViewHolder.setText(R.id.totalAssignAmountTextView, "总分配：" + data.totalAmount);
-                baseViewHolder.setText(R.id.offDays,"请假："+data.offDays);
-                baseViewHolder.setText(R.id.assignRatio,"分配系数："+data.assignRatio);
+                baseViewHolder.setText(R.id.offDays, "请假：" + data.offDays);
+                baseViewHolder.setText(R.id.assignRatio, "分配系数：" + data.assignRatio);
                 baseViewHolder.getView(R.id.offDays).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        showNumberInputPop(baseViewHolder,data);
+                        showNumberInputPop(baseViewHolder, data);
                     }
                 });
                 final CheckBox checkBox = baseViewHolder.getView(R.id.checkbox);
@@ -84,7 +97,7 @@ public class AssignActivity extends AppCompatActivity {
                     public void onClick(View v) {
                         if (!autoAssignTB.isChecked()) {
                             if (data.isSelected) {
-                                data.totalAmount = BigDecimalHelper.minus(data.totalAmount,data.assignAmout);
+                                data.totalAmount = BigDecimalHelper.minus(data.totalAmount, data.assignAmout);
                                 data.assignAmout = 0;
                                 data.isSelected = false;
                                 personAdapter.notifyItemChanged(baseViewHolder.getAdapterPosition());
@@ -108,18 +121,18 @@ public class AssignActivity extends AppCompatActivity {
         };
     }
 
-    private void showNumberInputPop(final BaseViewHolder baseViewHolder, final Person person){
-        NumberInputPopWindow numberInputPopWindow = new NumberInputPopWindow(this,maxDay).setOnDisMiss(new DialogCallback() {
+    private void showNumberInputPop(final BaseViewHolder baseViewHolder, final Person person) {
+        NumberInputPopWindow numberInputPopWindow = new NumberInputPopWindow(this, maxDay).setOnDisMiss(new DialogCallback() {
             @Override
             public void onDismiss(boolean confirmFlag, Object... values) {
-               if(confirmFlag){
-                   Double value = (Double) values[0];
-                   person.offDays = value;
-                   person.assignRatio = BigDecimalHelper.divide(BigDecimalHelper.minus(maxDay,value),maxDay,2);
-                   baseViewHolder.setText(R.id.offDays,"请假："+value);
-                   baseViewHolder.setText(R.id.assignRatio,"分配系数："+person.assignRatio);
-                   autoAssign();
-               }
+                if (confirmFlag) {
+                    Double value = (Double) values[0];
+                    person.offDays = value;
+                    person.assignRatio = BigDecimalHelper.divide(BigDecimalHelper.minus(maxDay, value), maxDay, 2);
+                    baseViewHolder.setText(R.id.offDays, "请假：" + value);
+                    baseViewHolder.setText(R.id.assignRatio, "分配系数：" + person.assignRatio);
+                    autoAssign();
+                }
             }
         });
         numberInputPopWindow.show(baseViewHolder.getView(R.id.offDays));
@@ -197,14 +210,13 @@ public class AssignActivity extends AppCompatActivity {
         dialog.show(getSupportFragmentManager(), "inputnumber");
     }
 
-    private void save() {
+    private boolean save() {
         List<AssignDetails> list = new ArrayList<>();
-        double totalAssigned = 0;
-        double totalAmount = recordDetailsGroupByMonthList.get(currentIndex).getTotalAmount();
         RecorDetailsGroupByMonth record = recordDetailsGroupByMonthList.get(currentIndex);
-        for(Person person:personList){
-            if(person.isSelected){
-                totalAssigned = BigDecimalHelper.add(totalAssigned,person.assignAmout);
+        double totalAssigned = 0;
+        for (Person person : personList) {
+            if (person.isSelected) {
+                totalAssigned = BigDecimalHelper.add(totalAssigned, person.assignAmout);
 
                 AssignDetails assignDetails = new AssignDetails();
                 assignDetails.setRecordTime(record.getRecordTime());
@@ -217,15 +229,21 @@ public class AssignActivity extends AppCompatActivity {
                 list.add(assignDetails);
             }
         }
-        double remainValue = BigDecimalHelper.minus(totalAmount,totalAssigned);
-
+        double remainValue = BigDecimalHelper.minus(record.getTotalAmount(), totalAssigned);
+        if(BigDecimalHelper.compare(remainValue,10)>0){
+            DialogFactory.getInfoDialog("请将金额完全分配后再保存数据").show(getSupportFragmentManager(),"info");
+            return false;
+        }
+        new AssignDetailsDbManager(this).save(list);
+        new RemainDbManager(this).addRemainValue(remainValue);
+        return true;
     }
 
     private void deleRecord() {
-//        tempRecordDetailsManager.dele("month = ?",String.valueOf(recordDetailsGroupByMonthList.get(currentIndex).getMonth().toEpochDay()));
-        recordDetailsGroupByMonthList.remove(currentIndex);
+        RecorDetailsGroupByMonth recorDetailsGroupByMonth = recordDetailsGroupByMonthList.remove(currentIndex);
         currentIndex = -1;
         maxDay = 30;
+        recordDetailsDbManager.updateAssigned(recordTime, recorDetailsGroupByMonth.getMonth());
     }
 
     private void initialView() {
@@ -237,21 +255,22 @@ public class AssignActivity extends AppCompatActivity {
         confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                save();
-                deleRecord();
-                for (Person person : personList) {
-                    person.assignAmout = 0;
-                    person.isSelected = false;
+                if(save()) {
+                    deleRecord();
+                    for (Person person : personList) {
+                        person.assignAmout = 0;
+                        person.isSelected = false;
+                    }
+                    changeAdapter(1);
                 }
-                changeAdapter(1);
             }
         });
         backStepButton = findViewById(R.id.backStep);
         backStepButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                for(Person person : personList){
-                    person.totalAmount = BigDecimalHelper.minus(person.totalAmount,person.assignAmout);
+                for (Person person : personList) {
+                    person.totalAmount = BigDecimalHelper.minus(person.totalAmount, person.assignAmout);
                     person.assignAmout = 0;
                     person.isSelected = false;
                 }
@@ -261,8 +280,8 @@ public class AssignActivity extends AppCompatActivity {
         autoAssignTB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                for(Person person : personList){
-                    person.totalAmount = BigDecimalHelper.minus(person.totalAmount,person.assignAmout);
+                for (Person person : personList) {
+                    person.totalAmount = BigDecimalHelper.minus(person.totalAmount, person.assignAmout);
                     person.assignAmout = 0;
                     person.isSelected = false;
                 }
@@ -273,8 +292,27 @@ public class AssignActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putLong("recordtime", recordTime.toEpochSecond(ZoneOffset.ofHours(8)));
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        recordTime = LocalDateTime.ofEpochSecond(savedInstanceState.getLong("recordtime"), 0, ZoneOffset.ofHours(8));
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
+            recordTime = LocalDateTime.ofEpochSecond(bundle.getLong("recordtime"), 0, ZoneOffset.ofHours(8));
+        } else {
+            recordTime = LocalDateTime.now();
+        }
+
         setContentView(R.layout.activity_assign);
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("按月份分配");
@@ -295,5 +333,6 @@ public class AssignActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         changeAdapter(1);
+        ToastFactory.showCenterToast(this, recordTime.format(DateUtils.getYyyyMdHHmmss_Formatter()));
     }
 }

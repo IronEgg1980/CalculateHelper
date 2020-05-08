@@ -21,6 +21,7 @@ import java.util.List;
 import yzw.ahaqth.calculatehelper.R;
 import yzw.ahaqth.calculatehelper.manager.RecordDetailsDbManager;
 import yzw.ahaqth.calculatehelper.moduls.RecordDetails;
+import yzw.ahaqth.calculatehelper.moduls.RecordDetailsGroupByItem;
 import yzw.ahaqth.calculatehelper.tools.DateUtils;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseAdapter;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
@@ -30,32 +31,31 @@ import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
 public class MainActivity extends AppCompatActivity {
     private String TAG = "殷宗旺";
-    private List<RecordDetails> dataList;
-    private BaseAdapter<RecordDetails> adapter;
+    private List<RecordDetailsGroupByItem> dataList;
+    private BaseAdapter<RecordDetailsGroupByItem> adapter;
     private RecyclerView recyclerView;
     private DrawerLayout drawerLayout;
     private LocalDateTime recordTime;
     private RecordDetailsDbManager dbManager;
-    private boolean hasUnsignedData = false;
+    private boolean hasUnsignedData = false,jumpFlag = true;
     private TextView recordTimeTextView;
 
     private void initial() {
+        this.recordTime = LocalDateTime.now();
         dbManager = new RecordDetailsDbManager(this);
-        dataList = dbManager.find("datamode = ?", String.valueOf(DataMode.UNASSIGNED.ordinal()));
-        if (dataList.isEmpty()) {
-            this.recordTime = LocalDateTime.now();
-        } else {
+        dataList = dbManager.getUnassignedRecordGroupByItemList();
+        if (!dataList.isEmpty()) {
             this.recordTime = dataList.get(0).getRecordTime();
             this.hasUnsignedData = true;
+            this.jumpFlag = false;
         }
         dataList.clear();
-        adapter = new BaseAdapter<RecordDetails>(R.layout.recorddetails_item_layout, dataList) {
+        adapter = new BaseAdapter<RecordDetailsGroupByItem>(R.layout.recordgroupbyitem_item_layout, dataList) {
             @Override
-            public void bindData(BaseViewHolder baseViewHolder, RecordDetails data) {
-                baseViewHolder.setText(R.id.month_textview,"月份："+ data.getMonth().format(DateUtils.getYyyyM_Formatter()));
-                baseViewHolder.setText(R.id.itemname_textview, "项目："+data.getItemName());
-                baseViewHolder.setText(R.id.amount_textview,"金额："+ String.valueOf(data.getAmount()));
-                baseViewHolder.setText(R.id.datamode_textview, "状态："+data.getDataMode().getDescribe());
+            public void bindData(BaseViewHolder baseViewHolder, RecordDetailsGroupByItem data) {
+                baseViewHolder.setText(R.id.itemname_textview,data.getItemName());
+                baseViewHolder.setText(R.id.amount_textview,"总金额："+ data.getTotalAmount());
+                baseViewHolder.setText(R.id.note_textview, data.getMonthNote());
             }
         };
     }
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
         recordTimeTextView.setText(s);
         dataList.clear();
 //        dataList.addAll(dbManager.find(recordTime));
-        dataList.addAll(dbManager.findAll());
+        dataList.addAll(dbManager.getRecordGroupByItemList(recordTime));
         adapter.notifyDataSetChanged();
     }
 
@@ -82,16 +82,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 drawerLayout.closeDrawers();
-                Intent intent = new Intent(MainActivity.this,InputActivity.class);
-                intent.putExtra("recordtime",recordTime.toEpochSecond(ZoneOffset.ofHours(8)));
-                startActivity(intent);
+                jumpToInput();
             }
         });
         findViewById(R.id.menu_assign).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                drawerLayout.closeDrawers();
-                startActivity(new Intent(MainActivity.this, AssignActivity.class));
+                drawerLayout.closeDrawers();Intent intent = new Intent(MainActivity.this,AssignActivity.class);
+                intent.putExtra("recordtime",recordTime.toEpochSecond(ZoneOffset.ofHours(8)));
+                startActivity(intent);
             }
         });
         findViewById(R.id.menu_person_manage).setOnClickListener(new View.OnClickListener() {
@@ -110,6 +109,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void jumpToInput(){
+        Intent intent = new Intent(MainActivity.this,InputActivity.class);
+        intent.putExtra("recordtime",recordTime.toEpochSecond(ZoneOffset.ofHours(8)));
+        startActivity(intent);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -125,10 +130,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (hasUnsignedData)
+        if (hasUnsignedData) {
             showDialog();
-        else
+        }else if(jumpFlag){
+            jumpFlag = false;
+            jumpToInput();
+        }else {
             readData();
+        }
     }
 
     @Override
@@ -148,12 +157,14 @@ public class MainActivity extends AppCompatActivity {
         confirmDialog.setDialogCallback(new DialogCallback() {
             @Override
             public void onDismiss(boolean confirmFlag, Object... values) {
+                hasUnsignedData = false;
                 if (!confirmFlag) {
                     dbManager.dele("datamode = ?", String.valueOf(DataMode.UNASSIGNED.ordinal()));
                     recordTime = LocalDateTime.now();
+                    jumpToInput();
+                } else {
+                    readData();
                 }
-                readData();
-                hasUnsignedData = false;
             }
         });
         confirmDialog.show(getSupportFragmentManager(),"dialog");

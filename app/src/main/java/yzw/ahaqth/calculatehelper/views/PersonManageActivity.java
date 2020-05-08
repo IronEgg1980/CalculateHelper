@@ -79,8 +79,17 @@ public class PersonManageActivity extends AppCompatActivity {
                 }
             }
         };
+        GridLayoutManager layoutManager = new GridLayoutManager(this,2);
+        layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                if(position == personList.size() - 1)
+                    return 2;
+                return 1;
+            }
+        });
         recyclerView = findViewById(R.id.recyclerview);
-        recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
     }
 
@@ -155,7 +164,7 @@ public class PersonManageActivity extends AppCompatActivity {
         person.setName(name);
         dbManager.save(person);
         personList.add(position,person);
-        adapter.notifyItemRangeChanged(position, 2);
+        adapter.notifyDataSetChanged();
         recyclerView.smoothScrollToPosition(position + 1);
 
     }
