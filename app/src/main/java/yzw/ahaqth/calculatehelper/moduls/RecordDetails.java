@@ -3,11 +3,15 @@ package yzw.ahaqth.calculatehelper.moduls;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import yzw.ahaqth.calculatehelper.views.interfaces.DataMode;
+
 public class RecordDetails extends BaseModul {
     private LocalDateTime recordTime;
     private LocalDate month;
     private String itemName;
     private double amount;
+    private DataMode dataMode;
+
 
     public LocalDateTime getRecordTime() {
         return recordTime;
@@ -39,5 +43,13 @@ public class RecordDetails extends BaseModul {
 
     public void setAmount(double amount) {
         this.amount = amount;
+    }
+
+    public DataMode getDataMode() {
+        return dataMode;
+    }
+
+    public void setDataMode(DataMode dataMode) {
+        this.dataMode = dataMode;
     }
 }

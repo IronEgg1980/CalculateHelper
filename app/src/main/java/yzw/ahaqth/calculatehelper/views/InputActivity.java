@@ -8,6 +8,7 @@ import android.os.Message;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
@@ -15,9 +16,14 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatToggleButton;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,20 +31,12 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import yzw.ahaqth.calculatehelper.R;
 import yzw.ahaqth.calculatehelper.manager.ItemDbManager;
 import yzw.ahaqth.calculatehelper.manager.RecordDetailsDbManager;
-import yzw.ahaqth.calculatehelper.manager.TempRecordDbManager;
-import yzw.ahaqth.calculatehelper.manager.TempRecordDetailsManager;
 import yzw.ahaqth.calculatehelper.moduls.AssignInMonthEntity;
 import yzw.ahaqth.calculatehelper.moduls.Item;
-import yzw.ahaqth.calculatehelper.moduls.TempRecord;
-import yzw.ahaqth.calculatehelper.moduls.TempRecordDetails;
+import yzw.ahaqth.calculatehelper.moduls.RecordDetails;
 import yzw.ahaqth.calculatehelper.tools.BigDecimalHelper;
 import yzw.ahaqth.calculatehelper.tools.DateUtils;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
@@ -48,10 +46,13 @@ import yzw.ahaqth.calculatehelper.views.adapters.MultiTypeModul;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
 import yzw.ahaqth.calculatehelper.views.dialogs.DropDownList;
 import yzw.ahaqth.calculatehelper.views.dialogs.InputNumberDialog;
+import yzw.ahaqth.calculatehelper.views.dialogs.LoadingDialog;
+import yzw.ahaqth.calculatehelper.views.dialogs.ToastFactory;
+import yzw.ahaqth.calculatehelper.views.interfaces.DataMode;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
 public class InputActivity extends AppCompatActivity {
-    protected class Adapter extends MultiTypeAdapter{
+    protected class Adapter extends MultiTypeAdapter {
 
         Adapter() {
             super(list);
@@ -105,10 +106,10 @@ public class InputActivity extends AppCompatActivity {
         }
     }
 
+    private AppCompatToggleButton manulAssignTB;
     private DropDownList dropDownList;
     private TextView itemNameTextView;
     private EditText itemAmountEditText;
-    private RadioButton manualAssignRB;
     private MultiTypeAdapter adpter;
     private RecyclerView recyclerView;
     private List<MultiTypeModul> list;
@@ -116,22 +117,14 @@ public class InputActivity extends AppCompatActivity {
     private double totalAmount;
     private LocalDateTime recordTime; // 传入参数
     private Handler mHander;
-    private TempRecord tempRecord;
-    private List<TempRecordDetails> tempRecordDetailsList;
     private RecordDetailsDbManager recordDetailsDbManager;
-    private TempRecordDetailsManager tempRecordDetailsManager;
-    private TempRecordDbManager tempRecordDbManager;
     private boolean isWaiting;
     private boolean isBreak;
     private String itemName;
     private double amount;
     private List<Item> items;
-
-    private void clearAll() {
-        tempRecordDetailsManager.deleAll();
-        tempRecordDbManager.deleAll();
-    }
-
+    private List<RecordDetails> inputResults;
+    private LoadingDialog loadingDialog;
 
     private void createMonthList() {
         LocalDate localDate = recordTime.toLocalDate();
@@ -157,30 +150,37 @@ public class InputActivity extends AppCompatActivity {
         this.mHander = new Handler(new Handler.Callback() {
             @Override
             public boolean handleMessage(Message msg) {
-                if (msg.what == 0x01) {
-                    Bundle bundle = msg.getData();
-                    String s = "已存在 " + bundle.getString("month") +
-                            bundle.getString("itemname") +
-                            " 的记录，\n点击【确定】合并记录，【取消】返回重新选择月份。";
-                    DialogFactory confirmDialog = DialogFactory.getConfirmDialog(s);
-                    confirmDialog.setDialogCallback(new DialogCallback() {
-                        @Override
-                        public void onDismiss(boolean confirmFlag, Object... values) {
-                            isWaiting = false;
-                            isBreak = !confirmFlag;
-                        }
-                    });
-                    confirmDialog.show(getSupportFragmentManager(), "confirmDialog");
-                } else {
-                    DialogFactory.getInfoDialog("已保存").show(getSupportFragmentManager(), "saved");
-                    reset();
+                switch (msg.what){
+                    case 0x11:
+                        loadingDialog.show(getSupportFragmentManager(),"loading");
+                        break;
+                    case 0x01 :
+                        Bundle bundle = msg.getData();
+                        String s = "已存在 " + bundle.getString("itemname") +
+                                " 的记录，\n点击【确定】合并金额，【取消】返回重新选择项目。";
+                        DialogFactory confirmDialog = DialogFactory.getConfirmDialog(s);
+                        confirmDialog.setDialogCallback(new DialogCallback() {
+                            @Override
+                            public void onDismiss(boolean confirmFlag, Object... values) {
+                                isWaiting = false;
+                                isBreak = !confirmFlag;
+                            }
+                        });
+                        confirmDialog.show(getSupportFragmentManager(), "confirmDialog");
+                        break;
+                    case 0x02:
+                        ToastFactory.showCenterToast(InputActivity.this,"数据已保存");
+                        reset();
+                    case 0x10:
+                        loadingDialog.dismiss();
+                        break;
                 }
                 return true;
             }
         });
         this.recordDetailsDbManager = new RecordDetailsDbManager(this);
-        this.tempRecordDetailsManager = new TempRecordDetailsManager(this);
-        this.tempRecordDbManager = new TempRecordDbManager(this);
+        this.inputResults = new ArrayList<>();
+        this.loadingDialog = LoadingDialog.getInstance("正在保存数据...");
     }
 
     private void initialView() {
@@ -216,13 +216,11 @@ public class InputActivity extends AppCompatActivity {
                 }
             }
         });
-        RadioButton autoAssignRB = findViewById(R.id.radio1);
-        autoAssignRB.setChecked(true);
-        manualAssignRB = findViewById(R.id.radio2);
-        RadioGroup radioGroup = findViewById(R.id.radiogroup);
-        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+        manulAssignTB = findViewById(R.id.toggleAutoAssign);
+        manulAssignTB.setChecked(false);
+        manulAssignTB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 toggleAssignMode();
             }
         });
@@ -330,7 +328,7 @@ public class InputActivity extends AppCompatActivity {
     }
 
     private void toggleAssignMode() {
-        manualFlag = manualAssignRB.isChecked();
+        manualFlag = manulAssignTB.isChecked();
         for (MultiTypeModul modul : list) {
             if (modul.getItemViewType() != ItemViewTypeSupport.TYPE_MONTH)
                 continue;
@@ -419,20 +417,27 @@ public class InputActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                if (tempRecordDetailsList == null)
-                    tempRecordDetailsList = new ArrayList<>();
+                Message message1 = mHander.obtainMessage();
+                message1.what = 0x11;
+                mHander.sendMessage(message1);
 
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                if (inputResults == null)
+                    inputResults = new ArrayList<>();
+                inputResults.clear();
                 for (MultiTypeModul modul : list) {
                     if (modul.getItemViewType() != ItemViewTypeSupport.TYPE_MONTH)
                         continue;
                     AssignInMonthEntity entity = (AssignInMonthEntity) modul;
                     if (entity.isSelected) {
-                        TempRecordDetails details = new TempRecordDetails();
-                        details.setRecordTime(recordTime);
-                        details.setMonth(entity.month);
-                        details.setItemName(itemName);
-                        details.setAmount(entity.amount);
-                        if (recordDetailsDbManager.isExist(itemName, entity.month)) {
+                        RecordDetails details = recordDetailsDbManager.findOne("itemname = ? and recordtime = ?",
+                                itemName, String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8))));
+                        if (details != null) {
                             isBreak = false;
                             isWaiting = true;
 
@@ -440,7 +445,6 @@ public class InputActivity extends AppCompatActivity {
                             message.what = 0x01;
                             Bundle bundle = new Bundle();
                             bundle.putString("itemname", itemName);
-                            bundle.putString("month", entity.month.format(DateUtils.getYyyyM_Formatter()));
                             message.setData(bundle);
                             mHander.sendMessage(message);
 
@@ -453,29 +457,27 @@ public class InputActivity extends AppCompatActivity {
                             }
 
                             if (isBreak) {
+                                Message message0 = mHander.obtainMessage();
+                                message0.what = 0x10;
+                                mHander.sendMessage(message0);
                                 return;
                             } else {
-                                details.setDataMode(TempRecordDetails.MODE_MODIFY);
+                                details.setAmount(BigDecimalHelper.add(entity.amount, details.getAmount()));
+                                recordDetailsDbManager.dele(details);
                             }
                         } else {
-                            details.setDataMode(TempRecordDetails.MODE_ADD);
+                            details = new RecordDetails();
+                            details.setRecordTime(recordTime);
+                            details.setMonth(entity.month);
+                            details.setItemName(itemName);
+                            details.setAmount(entity.amount);
+                            details.setDataMode(DataMode.UNASSIGNED);
                         }
-                        tempRecordDetailsList.add(details);
+                        inputResults.add(details);
                     }
                 }
 
-                tempRecord = tempRecordDbManager.findOne(null);
-                if (tempRecord == null) {
-                    tempRecord = new TempRecord();
-                    tempRecord.setRecordTime(recordTime);
-                }
-                tempRecord.putIntoTotalAmount(amount);
-                tempRecordDbManager.save(tempRecord);
-
-                tempRecordDetailsManager.save(tempRecordDetailsList);
-
-                tempRecordDetailsList = null;
-                tempRecord = null;
+                recordDetailsDbManager.save(inputResults);
 
                 Message message = mHander.obtainMessage();
                 message.what = 0x02;
@@ -493,6 +495,14 @@ public class InputActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
+            recordTime = LocalDateTime.ofEpochSecond(bundle.getLong("recordtime"), 0, ZoneOffset.ofHours(8));
+        }else{
+            recordTime = LocalDateTime.now();
+        }
+
         setContentView(R.layout.activity_input);
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("数据输入");
@@ -503,15 +513,14 @@ public class InputActivity extends AppCompatActivity {
                 onBackPressed();
             }
         });
-        recordTime = LocalDateTime.now();
-        Bundle bundle = getIntent().getExtras();
-        if (bundle != null) {
-            recordTime = LocalDateTime.ofEpochSecond(bundle.getLong("recordtime"), 0, ZoneOffset.ofHours(8));
-        }
         createMonthList();
         initial();
         initialView();
+    }
 
-//        clearAll();// 记得要删除这句
+    @Override
+    protected void onStart() {
+        super.onStart();
+        ToastFactory.showCenterToast(this,recordTime.format(DateUtils.getYyyyMdHHmmss_Formatter()));
     }
 }

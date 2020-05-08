@@ -14,11 +14,12 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import yzw.ahaqth.calculatehelper.R;
 import yzw.ahaqth.calculatehelper.manager.PersonDbManager;
-import yzw.ahaqth.calculatehelper.manager.TempRecordDetailsManager;
+import yzw.ahaqth.calculatehelper.moduls.AssignDetails;
 import yzw.ahaqth.calculatehelper.moduls.Person;
 import yzw.ahaqth.calculatehelper.moduls.RecorDetailsGroupByMonth;
 import yzw.ahaqth.calculatehelper.tools.BigDecimalHelper;
@@ -42,7 +43,6 @@ public class AssignActivity extends AppCompatActivity {
 
     private void initial() {
         this.currentIndex = -1;
-        this.recordDetailsGroupByMonthList = new TempRecordDetailsManager(this).getRecordGroupByMonthList();
         this.personList = new PersonDbManager(this).findAll();
 
         this.recordDetailsAdapter = new BaseAdapter<RecorDetailsGroupByMonth>(R.layout.assign_recorddetailslist_item, recordDetailsGroupByMonthList) {
@@ -198,12 +198,34 @@ public class AssignActivity extends AppCompatActivity {
     }
 
     private void save() {
+        List<AssignDetails> list = new ArrayList<>();
+        double totalAssigned = 0;
+        double totalAmount = recordDetailsGroupByMonthList.get(currentIndex).getTotalAmount();
+        RecorDetailsGroupByMonth record = recordDetailsGroupByMonthList.get(currentIndex);
+        for(Person person:personList){
+            if(person.isSelected){
+                totalAssigned = BigDecimalHelper.add(totalAssigned,person.assignAmout);
+
+                AssignDetails assignDetails = new AssignDetails();
+                assignDetails.setRecordTime(record.getRecordTime());
+                assignDetails.setMonth(record.getMonth());
+
+                assignDetails.setPersonName(person.getName());
+                assignDetails.setAssignAmount(person.assignAmout);
+                assignDetails.setOffDays(person.offDays);
+
+                list.add(assignDetails);
+            }
+        }
+        double remainValue = BigDecimalHelper.minus(totalAmount,totalAssigned);
 
     }
 
     private void deleRecord() {
+//        tempRecordDetailsManager.dele("month = ?",String.valueOf(recordDetailsGroupByMonthList.get(currentIndex).getMonth().toEpochDay()));
         recordDetailsGroupByMonthList.remove(currentIndex);
         currentIndex = -1;
+        maxDay = 30;
     }
 
     private void initialView() {

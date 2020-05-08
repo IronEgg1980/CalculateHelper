@@ -3,6 +3,7 @@ package yzw.ahaqth.calculatehelper.manager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Objects;
 
 import yzw.ahaqth.calculatehelper.moduls.BaseModul;
+import yzw.ahaqth.calculatehelper.views.interfaces.DataMode;
 
 
 public abstract class DbManager<T extends BaseModul> {
@@ -26,6 +28,7 @@ public abstract class DbManager<T extends BaseModul> {
     private List<String> fieldList;
     DbHelper dbHelper;
     String tableName;
+    Context mContext;
     private Class<T> clazz;
 
     public DbManager(Context context, Class<T> clazz) {
@@ -33,6 +36,7 @@ public abstract class DbManager<T extends BaseModul> {
         this.dbHelper = DbHelper.getInstance(context);
         this.fieldList = new ArrayList<>();
         this.clazz = clazz;
+        mContext = context;
         initial();
     }
 
@@ -112,6 +116,8 @@ public abstract class DbManager<T extends BaseModul> {
                     value = LocalDate.ofEpochDay(cursor.getLong(index));
                 } else if (type == LocalDateTime.class) {
                     value = LocalDateTime.ofEpochSecond(cursor.getLong(index), 0, ZoneOffset.ofHours(8));
+                } else if(type == DataMode.class){
+                    value = DataMode.values()[cursor.getInt(index)];
                 }
                 field1.set(t, value);
             }
@@ -152,6 +158,9 @@ public abstract class DbManager<T extends BaseModul> {
                 } else if (type == LocalDateTime.class) {
                     long localDate = ((LocalDateTime) field1.get(t)).toEpochSecond(ZoneOffset.ofHours(8));
                     contentValues.put(field, localDate);
+                } else if(type == DataMode.class){
+                    int enumValue =((DataMode)field1.get(t)).ordinal();
+                    contentValues.put(field,enumValue);
                 }
             }
             return contentValues;
@@ -287,4 +296,6 @@ public abstract class DbManager<T extends BaseModul> {
     public boolean isExist(T t) {
         return findOne(t.getId()) != null;
     }
+
+
 }
