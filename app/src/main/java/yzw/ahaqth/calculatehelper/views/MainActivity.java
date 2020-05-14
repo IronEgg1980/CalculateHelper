@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+import com.mcxtzhang.swipemenulib.SwipeMenuLayout;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -26,6 +28,7 @@ import yzw.ahaqth.calculatehelper.tools.DbManager;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseAdapter;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
+import yzw.ahaqth.calculatehelper.views.dialogs.HistoryActivity;
 import yzw.ahaqth.calculatehelper.views.dialogs.ToastFactory;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
@@ -49,10 +52,19 @@ public class MainActivity extends AppCompatActivity {
         }
         adapter = new BaseAdapter<RecordDetailsGroupByItem>(R.layout.recordgroupbyitem_item_layout, dataList) {
             @Override
-            public void bindData(BaseViewHolder baseViewHolder, RecordDetailsGroupByItem data) {
+            public void bindData(final BaseViewHolder baseViewHolder, final RecordDetailsGroupByItem data) {
                 baseViewHolder.setText(R.id.itemname_textview,data.getItemName());
                 baseViewHolder.setText(R.id.amount_textview,"总金额："+ data.getTotalAmount());
                 baseViewHolder.setText(R.id.note_textview, data.getMonthNote());
+                final SwipeMenuLayout menuLayout = baseViewHolder.getView(R.id.swipeMenuLayout);
+                baseViewHolder.getView(R.id.swipe_menu_del).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        menuLayout.smoothClose();
+                        DbManager.deleInputRecord(data);
+                        readData();
+                    }
+                });
             }
         };
     }
@@ -110,6 +122,13 @@ public class MainActivity extends AppCompatActivity {
                 showRemain((TextView) v);
             }
         });
+        findViewById(R.id.menu_history).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawerLayout.closeDrawers();
+                startActivity(new Intent(MainActivity.this, HistoryActivity.class));
+            }
+        });
     }
 
     private void jumpToInput(){
@@ -124,6 +143,12 @@ public class MainActivity extends AppCompatActivity {
         String s = "查询余额（"+remainValue+"）";
         textView.setText(s);
         ToastFactory.showCenterToast(this,String.valueOf(remainValue));
+    }
+
+    @Override
+    protected void onDestroy() {
+        DbHelper.onDestory();
+        super.onDestroy();
     }
 
     @Override
@@ -167,14 +192,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showDialog() {
-        DialogFactory confirmDialog = DialogFactory.getConfirmDialog("存在未分配的记录，是否继续上次的操作？\n点击【确定】继续，【取消】重新开始");
+        DialogFactory confirmDialog = DialogFactory.getConfirmDialog("存在未分配的记录，是否清除数据重新输入？");
         confirmDialog.setDialogCallback(new DialogCallback() {
             @Override
             public void onDismiss(boolean confirmFlag, Object... values) {
                 hasUnsignedData = false;
-                if (!confirmFlag) {
+                if (confirmFlag) {
 //                    DbManager.deleAll(RecordDetails.class,"datamode = ?", String.valueOf(DataMode.UNASSIGNED.ordinal()));
-                    DbManager.rollBack(recordTime);
+                    DbManager.clearOldInputData(recordTime);
                     recordTime = LocalDateTime.now();
                     jumpToInput();
                 } else {

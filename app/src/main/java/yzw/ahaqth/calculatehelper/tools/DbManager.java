@@ -19,6 +19,7 @@ import java.util.List;
 import yzw.ahaqth.calculatehelper.moduls.AssignDetails;
 import yzw.ahaqth.calculatehelper.moduls.AssignGroupByPerson;
 import yzw.ahaqth.calculatehelper.moduls.BaseModul;
+import yzw.ahaqth.calculatehelper.moduls.Record;
 import yzw.ahaqth.calculatehelper.moduls.RecordDetails;
 import yzw.ahaqth.calculatehelper.moduls.RecordDetailsGroupByItem;
 import yzw.ahaqth.calculatehelper.moduls.RecordDetailsGroupByMonth;
@@ -185,7 +186,6 @@ public abstract class DbManager {
             e.printStackTrace();
         } finally {
             database.endTransaction();
-            database.close();
         }
         return i;
     }
@@ -193,13 +193,11 @@ public abstract class DbManager {
     public static <T extends BaseModul> void deleAll(Class<T> clazz, String whereClause, String... conditions) {
         SQLiteDatabase database = DbHelper.getWriteDB();
         database.delete(clazz.getSimpleName().toLowerCase(), whereClause, conditions);
-        database.close();
     }
 
     public static <T extends BaseModul> void updateAll(Class<T> clazz, ContentValues contentValues, String whereClause, String... conditions) {
         SQLiteDatabase database = DbHelper.getWriteDB();
         database.update(clazz.getSimpleName().toLowerCase(), contentValues, whereClause, conditions);
-        database.close();
     }
 
     public static <T extends BaseModul> void updateAll(Class<T> clazz, T newT, String whereClause, String... conditions) {
@@ -220,7 +218,6 @@ public abstract class DbManager {
             } while (cursor.moveToNext());
         }
         cursor.close();
-        database.close();
         return list;
     }
 
@@ -239,7 +236,6 @@ public abstract class DbManager {
             } while (cursor.moveToNext());
         }
         cursor.close();
-        database.close();
         return list;
     }
 
@@ -260,7 +256,6 @@ public abstract class DbManager {
             t = cursor2Modul(clazz, cursor);
         }
         cursor.close();
-        database.close();
         return t;
     }
 
@@ -273,7 +268,6 @@ public abstract class DbManager {
             t = cursor2Modul(clazz, cursor);
         }
         cursor.close();
-        database.close();
         return t;
     }
 
@@ -286,7 +280,6 @@ public abstract class DbManager {
             t = cursor2Modul(clazz, cursor);
         }
         cursor.close();
-        database.close();
         return t;
     }
 
@@ -298,24 +291,28 @@ public abstract class DbManager {
         return !find(clazz, selection, selectionArgs).isEmpty();
     }
 
-    public static boolean rollBack(LocalDateTime recordTime) {
+    public static boolean clearOldInputData(LocalDateTime recordTime) {
         boolean result = false;
 
         String selection = "recordtime = ? ";
         String[] args = new String[]{String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8)))};
 
         Remain remain = findFirst(Remain.class);
-        double remainValue = remain == null ? 0 : remain.getAmount();
-
-        RemainDetails remainDetails = findOne(RemainDetails.class, selection, args);
-        double remainDetailsValue = remainDetails == null ? 0 : remainDetails.getVariableAmount();
+        double remainValue = 0;
+        if (remain != null) {
+            remainValue = remain.getAmount();
+            List<RemainDetails> list = find(RemainDetails.class, selection, args);
+            for (RemainDetails remainDetails : list) {
+                remainValue = BigDecimalHelper.minus(remainValue, remainDetails.getVariableAmount());
+            }
+        }
 
         SQLiteDatabase sqLiteDatabase = DbHelper.getWriteDB();
         sqLiteDatabase.beginTransaction();
 
         try {
             ContentValues contentValues1 = new ContentValues();
-            contentValues1.put("amount", BigDecimalHelper.minus(remainValue, remainDetailsValue));
+            contentValues1.put("amount", remainValue);
             sqLiteDatabase.update(Remain.class.getSimpleName().toLowerCase(), contentValues1, null, null);
 
             sqLiteDatabase.delete(AssignDetails.class.getSimpleName(), selection, args);
@@ -329,7 +326,6 @@ public abstract class DbManager {
             Log.d(TAG, "rollBack error,Message : " + e.getLocalizedMessage());
         } finally {
             sqLiteDatabase.endTransaction();
-            sqLiteDatabase.close();
             Log.d(TAG, "saveData: success！");
         }
         return result;
@@ -376,10 +372,114 @@ public abstract class DbManager {
             Log.d(TAG, "saveData: error,Message : " + e.getLocalizedMessage());
         } finally {
             sqLiteDatabase.endTransaction();
-            sqLiteDatabase.close();
             Log.d(TAG, "saveData: success！");
         }
         return result;
+    }
+
+    public static boolean saveInput(List<RecordDetails> list){
+        boolean b = false;
+        if(!list.isEmpty()) {
+            String selection = "recordtime = ?";
+            String[] args = new String[]{String.valueOf(list.get(0).getRecordTime().toEpochSecond(ZoneOffset.ofHours(8)))};
+
+            Remain remain = findFirst(Remain.class);
+            double remainValue = remain == null ? 0 : remain.getAmount();
+
+            RemainDetails remainDetails = findOne(RemainDetails.class, selection, args);
+            double remainDetailsValue = remainDetails == null ? 0 : remainDetails.getVariableAmount();
+
+            SQLiteDatabase database = DbHelper.getWriteDB();
+            database.beginTransaction();
+            try {
+                for (RecordDetails t : list) {
+                    ContentValues contentValues = modul2ContentValues(t);
+                    if (contentValues != null) {
+                        database.insert(RecordDetails.class.getSimpleName().toLowerCase(), null, contentValues);
+                    }
+                }
+
+                ContentValues contentValues1 = new ContentValues();
+                contentValues1.put("amount", BigDecimalHelper.minus(remainValue, remainDetailsValue));
+                database.update(Remain.class.getSimpleName().toLowerCase(), contentValues1, null, null);
+
+                database.delete(AssignDetails.class.getSimpleName(), selection, args);
+                database.delete(RemainDetails.class.getSimpleName(), selection, args);
+
+                ContentValues contentValues2 = new ContentValues();
+                contentValues2.put("datamode", DataMode.UNASSIGNED.ordinal());
+                database.update(RecordDetails.class.getSimpleName(), contentValues2, selection, args);
+                database.setTransactionSuccessful();
+                b = true;
+            } catch (Exception e) {
+                Log.d(TAG, "save error: " + e.getLocalizedMessage());
+                e.printStackTrace();
+            } finally {
+                database.endTransaction();
+            }
+        }
+        return b;
+    }
+
+    public static boolean deleInputRecord(RecordDetailsGroupByItem recordDetailsGroupByItem) {
+        boolean result = false;
+        String selection1 = "recordtime = ?";
+        String selection2 = "recordtime = ? and itemname = ?";
+        String[] args1 = {String.valueOf(recordDetailsGroupByItem.getRecordTime().toEpochSecond(ZoneOffset.ofHours(8)))};
+        String[] args2 = {String.valueOf(recordDetailsGroupByItem.getRecordTime().toEpochSecond(ZoneOffset.ofHours(8))),
+                recordDetailsGroupByItem.getItemName()};
+
+        Remain remain = findFirst(Remain.class);
+        double remainValue = 0;
+        if (remain != null) {
+            remainValue = remain.getAmount();
+            List<RemainDetails> list = find(RemainDetails.class, selection1, args1);
+            for (RemainDetails remainDetails : list) {
+                remainValue = BigDecimalHelper.minus(remainValue, remainDetails.getVariableAmount());
+            }
+        }
+
+        SQLiteDatabase database = DbHelper.getWriteDB();
+        database.beginTransaction();
+        try {
+            database.delete(RecordDetails.class.getSimpleName(), selection2, args2);
+            database.delete(AssignDetails.class.getSimpleName(), selection1, args1);
+            database.delete(RemainDetails.class.getSimpleName(), selection1, args1);
+
+            ContentValues contentValues1 = new ContentValues();
+            contentValues1.put("datamode", String.valueOf(DataMode.UNASSIGNED.ordinal()));
+            database.update(RecordDetails.class.getSimpleName(), contentValues1, selection1, args1);
+
+            ContentValues contentValues2 = new ContentValues();
+            contentValues2.put("amount", remainValue);
+            database.update(Remain.class.getSimpleName(), contentValues2, null, null);
+
+            result = true;
+            database.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "deleInputRecord error,Message : " + e.getLocalizedMessage());
+        } finally {
+            database.endTransaction();
+        }
+        return result;
+    }
+
+    public static void deleHistory(LocalDateTime recordTime){
+        String selection = "recordtime = ?";
+        String[] args = {String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8)))};
+        SQLiteDatabase database = DbHelper.getWriteDB();
+        database.beginTransaction();
+        try {
+            database.delete(RecordDetails.class.getSimpleName(), selection, args);
+            database.delete(AssignDetails.class.getSimpleName(), selection, args);
+            database.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "deleInputRecord error,Message : " + e.getLocalizedMessage());
+        } finally {
+            database.endTransaction();
+        }
     }
 
     public static boolean rollBackAssign(LocalDateTime recordTime, LocalDate month) {
@@ -415,18 +515,15 @@ public abstract class DbManager {
             Log.d(TAG, "rollBack error,Message : " + e.getLocalizedMessage());
         } finally {
             sqLiteDatabase.endTransaction();
-            sqLiteDatabase.close();
-            Log.d(TAG, "saveData: success！");
         }
         return result;
     }
 
     public static int count(String tableName, String column, String selection, String... selectionArgs) {
         SQLiteDatabase database = DbHelper.getReadDB();
-        Cursor cursor = database.query(true, tableName, new String[]{column}, selection, selectionArgs, column, null, column, null);
+        Cursor cursor = database.query(true, tableName, null, selection, selectionArgs, column, null, column, null);
         int count = cursor.getCount();
         cursor.close();
-        database.close();
         return count;
     }
 
@@ -609,4 +706,44 @@ public abstract class DbManager {
         return getAssignGroupByPerson(findList);
     }
 
+    public static List<Record> getRecordList(){
+        List<Record> result = new ArrayList<>();
+        List<RecordDetails> list = find(RecordDetails.class,
+                false,
+                null,
+                null,
+                null,
+                null,
+                "recordtime");
+        if(!list.isEmpty()) {
+            LocalDateTime localDateTime = list.get(0).getRecordTime();
+            double totalAmount = 0;
+
+            for(RecordDetails recordDetails:list){
+                if(!recordDetails.getRecordTime().isEqual(localDateTime)){
+                    int personCount = count(AssignDetails.class.getSimpleName().toLowerCase(),
+                            "personname",
+                            "recordtime = ?",String.valueOf(localDateTime.toEpochSecond(ZoneOffset.ofHours(8))));
+                    Record record = new Record();
+                    record.setRecordTime(localDateTime);
+                    record.setTotalAmount(totalAmount);
+                    record.setPersonCount(personCount);
+                    result.add(record);
+
+                    localDateTime = recordDetails.getRecordTime();
+                    totalAmount = 0;
+                }
+                totalAmount = BigDecimalHelper.add(totalAmount,recordDetails.getAmount());
+            }
+            int personCount = count(AssignDetails.class.getSimpleName().toLowerCase(),
+                    "personname",
+                    "recordtime = ?",String.valueOf(localDateTime.toEpochSecond(ZoneOffset.ofHours(8))));
+            Record lastOne = new Record();
+            lastOne.setRecordTime(localDateTime);
+            lastOne.setTotalAmount(totalAmount);
+            lastOne.setPersonCount(personCount);
+            result.add(lastOne);
+        }
+        return result;
+    }
 }

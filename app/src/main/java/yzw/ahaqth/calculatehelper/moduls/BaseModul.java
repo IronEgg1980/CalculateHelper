@@ -19,20 +19,17 @@ public abstract class BaseModul {
         if (contentValues != null) {
             database.insert(this.getClass().getSimpleName().toLowerCase(), null, contentValues);
         }
-        database.close();
     }
 
     public void dele(){
         SQLiteDatabase database = DbHelper.getWriteDB();
         database.delete(this.getClass().getSimpleName().toLowerCase(), "id = ?", new String[]{String.valueOf(this.id)});
-        database.close();
     }
 
     public void update(){
         ContentValues contentValues = DbManager.modul2ContentValues(this);
         SQLiteDatabase database = DbHelper.getWriteDB();
         database.update(this.getClass().getSimpleName().toLowerCase(),contentValues, "id = ?", new String[]{String.valueOf(this.id)});
-        database.close();
     }
 
     public boolean isSaved(){

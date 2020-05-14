@@ -473,10 +473,9 @@ public class InputActivity extends AppCompatActivity {
                                 mHander.sendMessage(message0);
                                 return;
                             } else {
-                                ContentValues contentValues = new ContentValues();
-                                contentValues.put("amount",BigDecimalHelper.add(entity.amount, details.getAmount()));
-                                DbManager.updateAll(RecordDetails.class, contentValues,"itemname = ? and recordtime = ? and month = ?",
-                                        itemName, String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8))), String.valueOf(entity.month.toEpochDay()));
+                                details.setAmount(BigDecimalHelper.add(entity.amount, details.getAmount()));
+                                details.setDataMode(DataMode.UNASSIGNED);
+                                details.update();
                             }
                         } else {
                             details = new RecordDetails();
@@ -489,8 +488,7 @@ public class InputActivity extends AppCompatActivity {
                         }
                     }
                 }
-
-                DbManager.saveAll(inputResults);
+                DbManager.saveInput(inputResults);
 
                 Message message = mHander.obtainMessage();
                 message.what = 0x02;

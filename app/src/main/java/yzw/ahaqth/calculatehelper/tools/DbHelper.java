@@ -26,6 +26,11 @@ public final class DbHelper extends SQLiteOpenHelper {
 
     private static DbHelper dbHelper = null;
 
+    public static void onDestory(){
+        dbHelper.close();
+        dbHelper = null;
+    }
+
     public static SQLiteDatabase getWriteDB(){
         return dbHelper.getWritableDatabase();
     }

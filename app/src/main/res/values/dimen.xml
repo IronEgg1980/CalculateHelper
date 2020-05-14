@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="Height_Toolbar">56dp</dimen>
-    <dimen name="Height_Item_PersonManage">48dp</dimen>
+    <dimen name="Height_Item_PersonManage">64dp</dimen>
     <dimen name="Height_Item_ItemManage">48dp</dimen>
 
     <dimen name="TextSize_XXL">40sp</dimen>
