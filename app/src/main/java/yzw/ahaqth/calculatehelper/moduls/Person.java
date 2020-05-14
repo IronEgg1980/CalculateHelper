@@ -12,7 +12,6 @@ public class Person extends BaseModul implements MultiTypeModul {
     public double assignRatio = 1.0f;
     public boolean isSelected = false;
     public double assignAmout = 0;
-    public double totalAmount = 0;
     public double offDays = 0;
 
     public String getName() {

@@ -16,15 +16,29 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/bottomGroup"
+        app:layout_constraintBottom_toTopOf="@id/bottomGroup"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
+    <androidx.appcompat.widget.AppCompatCheckBox
+        android:id="@+id/showAssignDetailsCheckedTextView"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="8dp"
+        android:checked="false"
+        android:gravity="center"
+        android:textSize="@dimen/TextSize_M"
+        android:text="查看分配详情"
+        android:button="@null"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
     <RelativeLayout
         android:id="@+id/bottomGroup"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -35,38 +49,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
+            android:layout_toStartOf="@id/backStep"
             android:layout_centerVertical="true"
             android:layout_marginStart="8dp"
             android:textOff="自动分配"
             android:textOn="自动分配" />
-
-<!--        <RadioGroup-->
-<!--            android:id="@+id/radioGroup"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_alignParentStart="true"-->
-<!--            android:layout_centerVertical="true"-->
-<!--            android:layout_marginStart="8dp"-->
-<!--            android:layout_marginEnd="8dp"-->
-<!--            android:layout_marginBottom="8dp"-->
-<!--            android:orientation="horizontal">-->
-
-<!--            <RadioButton-->
-<!--                android:id="@+id/radio1"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_weight="1"-->
-<!--                android:checked="true"-->
-<!--                android:text="自动" />-->
-
-<!--            <RadioButton-->
-<!--                android:id="@+id/radio2"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_weight="1"-->
-<!--                android:checked="false"-->
-<!--                android:text="手动" />-->
-<!--        </RadioGroup>-->
 
         <Button
             android:id="@+id/backStep"

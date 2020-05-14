@@ -1,8 +1,7 @@
 package yzw.ahaqth.calculatehelper.views;
 
-import android.content.Intent;
+import android.content.ContentValues;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -10,28 +9,30 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatCheckBox;
+import androidx.appcompat.widget.AppCompatToggleButton;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatToggleButton;
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import yzw.ahaqth.calculatehelper.R;
-import yzw.ahaqth.calculatehelper.manager.AssignDetailsDbManager;
-import yzw.ahaqth.calculatehelper.manager.PersonDbManager;
-import yzw.ahaqth.calculatehelper.manager.RecordDetailsDbManager;
-import yzw.ahaqth.calculatehelper.manager.RemainDbManager;
+import yzw.ahaqth.calculatehelper.moduls.RecordDetails;
+import yzw.ahaqth.calculatehelper.tools.DbManager;
 import yzw.ahaqth.calculatehelper.moduls.AssignDetails;
+import yzw.ahaqth.calculatehelper.moduls.AssignGroupByPerson;
 import yzw.ahaqth.calculatehelper.moduls.Person;
-import yzw.ahaqth.calculatehelper.moduls.RecorDetailsGroupByMonth;
-import yzw.ahaqth.calculatehelper.moduls.Remain;
+import yzw.ahaqth.calculatehelper.moduls.RecordDetailsGroupByMonth;
+import yzw.ahaqth.calculatehelper.moduls.RemainDetails;
 import yzw.ahaqth.calculatehelper.tools.BigDecimalHelper;
 import yzw.ahaqth.calculatehelper.tools.DateUtils;
+import yzw.ahaqth.calculatehelper.tools.DbTools;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseAdapter;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
@@ -46,30 +47,36 @@ public class AssignActivity extends AppCompatActivity {
     private AppCompatToggleButton autoAssignTB;
     private RelativeLayout bottomGroup;
     private Button confirmButton, backStepButton;
-    private List<RecorDetailsGroupByMonth> recordDetailsGroupByMonthList;
-    private BaseAdapter<RecorDetailsGroupByMonth> recordDetailsAdapter;
+    private AppCompatCheckBox showAssignDetails;
+    private List<AssignGroupByPerson> assignGroupByPersonList;
+    private List<RecordDetailsGroupByMonth> recordDetailsGroupByMonthList;
+    private BaseAdapter<RecordDetailsGroupByMonth> recordDetailsAdapter;
+
     private List<Person> personList;
     private BaseAdapter<Person> personAdapter;
     private int currentIndex, maxDay = 30;
-    private RecordDetailsDbManager recordDetailsDbManager;
 
     private void initial() {
         this.currentIndex = -1;
-        this.personList = new PersonDbManager(this).findAll();
-        this.recordDetailsDbManager = new RecordDetailsDbManager(this);
-        this.recordDetailsGroupByMonthList = recordDetailsDbManager.getRecordGroupByMonthList(recordTime, DataMode.UNASSIGNED);
-        this.recordDetailsAdapter = new BaseAdapter<RecorDetailsGroupByMonth>(R.layout.assign_recorddetailslist_item, recordDetailsGroupByMonthList) {
+        this.personList = DbManager.findAll(Person.class);
+        this.recordDetailsGroupByMonthList = DbTools.getRecordGroupByMonthList(recordTime);
+        this.recordDetailsAdapter = new BaseAdapter<RecordDetailsGroupByMonth>(R.layout.assign_recorddetailslist_item, recordDetailsGroupByMonthList) {
             @Override
-            public void bindData(final BaseViewHolder baseViewHolder, final RecorDetailsGroupByMonth data) {
+            public void bindData(final BaseViewHolder baseViewHolder, final RecordDetailsGroupByMonth data) {
                 baseViewHolder.setText(R.id.monthTextView, data.getMonth().format(DateUtils.getYyyyM_Formatter()));
                 baseViewHolder.setText(R.id.amountTextView, String.valueOf(data.getTotalAmount()));
                 baseViewHolder.setText(R.id.noteTextView, data.getItemNote());
+                baseViewHolder.setText(R.id.datamodeTextView, data.getDataMode().getDescribe());
                 baseViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        currentIndex = baseViewHolder.getAdapterPosition();
-                        maxDay = recordDetailsGroupByMonthList.get(currentIndex).getMonth().lengthOfMonth();
-                        changeAdapter(2);
+                        if (data.getDataMode() == DataMode.UNASSIGNED) {
+                            currentIndex = baseViewHolder.getAdapterPosition();
+                            maxDay = recordDetailsGroupByMonthList.get(currentIndex).getMonth().lengthOfMonth();
+                            changeAdapter(2);
+                        } else {
+                            ToastFactory.showCenterToast(AssignActivity.this, "该月份已分配");
+                        }
                     }
                 });
             }
@@ -79,7 +86,6 @@ public class AssignActivity extends AppCompatActivity {
             public void bindData(final BaseViewHolder baseViewHolder, final Person data) {
                 baseViewHolder.setText(R.id.nameTextView, data.getName());
                 baseViewHolder.setText(R.id.assignAmountTextView, "当前分配：" + data.assignAmout);
-                baseViewHolder.setText(R.id.totalAssignAmountTextView, "总分配：" + data.totalAmount);
                 baseViewHolder.setText(R.id.offDays, "请假：" + data.offDays);
                 baseViewHolder.setText(R.id.assignRatio, "分配系数：" + data.assignRatio);
                 baseViewHolder.getView(R.id.offDays).setOnClickListener(new View.OnClickListener() {
@@ -97,7 +103,6 @@ public class AssignActivity extends AppCompatActivity {
                     public void onClick(View v) {
                         if (!autoAssignTB.isChecked()) {
                             if (data.isSelected) {
-                                data.totalAmount = BigDecimalHelper.minus(data.totalAmount, data.assignAmout);
                                 data.assignAmout = 0;
                                 data.isSelected = false;
                                 personAdapter.notifyItemChanged(baseViewHolder.getAdapterPosition());
@@ -139,7 +144,8 @@ public class AssignActivity extends AppCompatActivity {
     }
 
     private void changeAdapter(int step) {
-        bottomGroup.setVisibility(step == 1 ? View.GONE : View.VISIBLE);
+        bottomGroup.setVisibility(step == 1 ? View.INVISIBLE : View.VISIBLE);
+        showAssignDetails.setVisibility(step == 1 ? View.VISIBLE : View.INVISIBLE);
         autoAssignTB.setChecked(true);
         recyclerView1.setAdapter(step == 1 ? recordDetailsAdapter : personAdapter);
     }
@@ -154,7 +160,6 @@ public class AssignActivity extends AppCompatActivity {
             if (p.isSelected) {
                 totalRatio = BigDecimalHelper.add(totalRatio, p.assignRatio);
             }
-            p.totalAmount = BigDecimalHelper.minus(p.totalAmount, p.assignAmout);
             p.assignAmout = 0;
         }
 
@@ -162,9 +167,7 @@ public class AssignActivity extends AppCompatActivity {
             double per = BigDecimalHelper.divide(totalAmount, totalRatio);
             for (Person p : personList) {
                 if (p.isSelected) {
-                    double value = BigDecimalHelper.multiplyOnFloor(per, p.assignRatio);
-                    p.assignAmout = value;
-                    p.totalAmount = BigDecimalHelper.add(p.totalAmount, value);
+                    p.assignAmout = BigDecimalHelper.multiplyOnFloor(per, p.assignRatio);
                 }
             }
         }
@@ -201,7 +204,6 @@ public class AssignActivity extends AppCompatActivity {
             public void onDismiss(boolean confirmFlag, Object... values) {
                 if (confirmFlag) {
                     person.assignAmout = (double) values[0];
-                    person.totalAmount = BigDecimalHelper.add(person.totalAmount, person.assignAmout);
                     person.isSelected = true;
                 }
                 personAdapter.notifyItemChanged(position);
@@ -212,7 +214,7 @@ public class AssignActivity extends AppCompatActivity {
 
     private boolean save() {
         List<AssignDetails> list = new ArrayList<>();
-        RecorDetailsGroupByMonth record = recordDetailsGroupByMonthList.get(currentIndex);
+        RecordDetailsGroupByMonth record = recordDetailsGroupByMonthList.get(currentIndex);
         double totalAssigned = 0;
         for (Person person : personList) {
             if (person.isSelected) {
@@ -230,20 +232,37 @@ public class AssignActivity extends AppCompatActivity {
             }
         }
         double remainValue = BigDecimalHelper.minus(record.getTotalAmount(), totalAssigned);
-        if(BigDecimalHelper.compare(remainValue,10)>0){
-            DialogFactory.getInfoDialog("请将金额完全分配后再保存数据").show(getSupportFragmentManager(),"info");
+        if (BigDecimalHelper.compare(remainValue, 10) > 0) {
+            DialogFactory.getInfoDialog("请将金额完全分配后再保存数据").show(getSupportFragmentManager(), "info");
             return false;
         }
-        new AssignDetailsDbManager(this).save(list);
-        new RemainDbManager(this).addRemainValue(remainValue);
-        return true;
+        RemainDetails remainDetails = new RemainDetails();
+        remainDetails.setRecordTime(recordTime);
+        remainDetails.setMonth(record.getMonth());
+        remainDetails.setVariableAmount(remainValue);
+        return DbTools.saveTogether(list, remainDetails);
     }
 
-    private void deleRecord() {
-        RecorDetailsGroupByMonth recorDetailsGroupByMonth = recordDetailsGroupByMonthList.remove(currentIndex);
+
+    private void onSaved() {
+        DbTools.changeDataMode(recordDetailsGroupByMonthList.get(currentIndex),DataMode.ASSIGNED);
+
         currentIndex = -1;
         maxDay = 30;
-        recordDetailsDbManager.updateAssigned(recordTime, recorDetailsGroupByMonth.getMonth());
+    }
+
+    private void showAssignDetails() {
+        this.assignGroupByPersonList = DbTools.getAssignGroupByPersonList(recordTime);
+        BaseAdapter<AssignGroupByPerson> assignAdapter = new BaseAdapter<AssignGroupByPerson>(R.layout.assign_recorddetailslist_item, assignGroupByPersonList) {
+            @Override
+            public void bindData(BaseViewHolder baseViewHolder, AssignGroupByPerson data) {
+                baseViewHolder.setText(R.id.monthTextView, data.getPersonName());
+                baseViewHolder.setText(R.id.amountTextView, "总金额：" + data.getAssignAmount());
+                baseViewHolder.setText(R.id.noteTextView, "明细：" + data.getMonthList());
+                baseViewHolder.setText(R.id.datamodeTextView, data.getOffDaysNote());
+            }
+        };
+        recyclerView1.setAdapter(assignAdapter);
     }
 
     private void initialView() {
@@ -255,12 +274,9 @@ public class AssignActivity extends AppCompatActivity {
         confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(save()) {
-                    deleRecord();
-                    for (Person person : personList) {
-                        person.assignAmout = 0;
-                        person.isSelected = false;
-                    }
+                if (save()) {
+                    onSaved();
+                    resetPersonList();
                     changeAdapter(1);
                 }
             }
@@ -269,11 +285,7 @@ public class AssignActivity extends AppCompatActivity {
         backStepButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                for (Person person : personList) {
-                    person.totalAmount = BigDecimalHelper.minus(person.totalAmount, person.assignAmout);
-                    person.assignAmout = 0;
-                    person.isSelected = false;
-                }
+                resetPersonList();
                 changeAdapter(1);
             }
         });
@@ -281,14 +293,35 @@ public class AssignActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 for (Person person : personList) {
-                    person.totalAmount = BigDecimalHelper.minus(person.totalAmount, person.assignAmout);
                     person.assignAmout = 0;
                     person.isSelected = false;
                 }
                 personAdapter.notifyDataSetChanged();
             }
         });
+        showAssignDetails = findViewById(R.id.showAssignDetailsCheckedTextView);
+        showAssignDetails.setChecked(false);
+        showAssignDetails.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (showAssignDetails.isChecked()) {
+                    showAssignDetails.setText("返回");
+                    showAssignDetails();
+                } else {
+                    showAssignDetails.setText("查看分配情况");
+                    recyclerView1.setAdapter(recordDetailsAdapter);
+                }
+            }
+        });
+    }
 
+    private void resetPersonList() {
+        for (Person person : personList) {
+            person.assignAmout = 0;
+            person.offDays = 0;
+            person.assignRatio = 1;
+            person.isSelected = false;
+        }
     }
 
     @Override

@@ -13,8 +13,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import yzw.ahaqth.calculatehelper.R;
-import yzw.ahaqth.calculatehelper.manager.ItemDbManager;
-import yzw.ahaqth.calculatehelper.moduls.Item;
 import yzw.ahaqth.calculatehelper.views.MyDivideItemDecoration;
 
 public class DropDownList<T> extends PopupWindow {

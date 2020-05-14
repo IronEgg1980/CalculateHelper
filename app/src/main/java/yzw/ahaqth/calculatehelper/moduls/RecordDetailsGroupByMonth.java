@@ -3,11 +3,14 @@ package yzw.ahaqth.calculatehelper.moduls;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public class RecorDetailsGroupByMonth {
+import yzw.ahaqth.calculatehelper.views.interfaces.DataMode;
+
+public class RecordDetailsGroupByMonth {
     private LocalDateTime recordTime;
     private LocalDate month;
     private double totalAmount;
     private String itemNote;
+    private DataMode dataMode;
 
     public LocalDateTime getRecordTime() {
         return recordTime;
@@ -39,5 +42,13 @@ public class RecorDetailsGroupByMonth {
 
     public void setItemNote(String itemNote) {
         this.itemNote = itemNote;
+    }
+
+    public DataMode getDataMode() {
+        return dataMode;
+    }
+
+    public void setDataMode(DataMode dataMode) {
+        this.dataMode = dataMode;
     }
 }

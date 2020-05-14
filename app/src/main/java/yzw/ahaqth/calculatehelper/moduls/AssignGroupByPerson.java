@@ -6,6 +6,7 @@ public final class AssignGroupByPerson {
     private LocalDateTime recordTime;
     private String personName;
     private double assignAmount;
+    private String monthList;
     private String offDaysNote;
 
     public LocalDateTime getRecordTime() {
@@ -38,5 +39,13 @@ public final class AssignGroupByPerson {
 
     public void setOffDaysNote(String offDaysNote) {
         this.offDaysNote = offDaysNote;
+    }
+
+    public String getMonthList() {
+        return monthList;
+    }
+
+    public void setMonthList(String monthList) {
+        this.monthList = monthList;
     }
 }

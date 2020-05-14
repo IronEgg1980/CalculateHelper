@@ -16,8 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import yzw.ahaqth.calculatehelper.R;
-import yzw.ahaqth.calculatehelper.manager.ItemDbManager;
 import yzw.ahaqth.calculatehelper.moduls.Item;
+import yzw.ahaqth.calculatehelper.tools.DbManager;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
 import yzw.ahaqth.calculatehelper.views.adapters.ItemViewTypeSupport;
 import yzw.ahaqth.calculatehelper.views.adapters.MultiTypeAdapter;
@@ -30,7 +30,6 @@ public class ItemManageActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private List<MultiTypeModul> itemList;
     private MultiTypeAdapter adapter;
-    private ItemDbManager dbManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,7 +43,6 @@ public class ItemManageActivity extends AppCompatActivity {
                 onBackPressed();
             }
         });
-        dbManager = new ItemDbManager(this);
 
         generateData();
 
@@ -52,7 +50,7 @@ public class ItemManageActivity extends AppCompatActivity {
             @Override
             public void bindData(final BaseViewHolder baseViewHolder, MultiTypeModul data) {
                 if(data.getItemViewType() == ItemViewTypeSupport.TYPE_ITEM_BUTTON){
-                    baseViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+                    baseViewHolder.getView(R.id.button).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             add(baseViewHolder.getAdapterPosition());
@@ -93,7 +91,7 @@ public class ItemManageActivity extends AppCompatActivity {
     }
 
     private void generateData(){
-        List<Item> items = dbManager.findAll();
+        List<Item> items = DbManager.findAll(Item.class);
         itemList = new ArrayList<>();
         itemList.addAll(items);
         itemList.add(new MultiTypeModul() {
@@ -114,14 +112,14 @@ public class ItemManageActivity extends AppCompatActivity {
                     dialog.showError("请输入名称！");
                     return;
                 }
-                if (dbManager.isExist(s)) {
+                if (DbManager.isExist(Item.class,"name = ?",s)) {
                     dialog.showError("已存在该项目，请改名！");
                     return;
                 }
 
                 Item item = new Item();
                 item.setName(s);
-                dbManager.save(item);
+                DbManager.save(Item.class,item);
                 itemList.add(position, item);
 
                 dialog.dismiss();
@@ -142,18 +140,18 @@ public class ItemManageActivity extends AppCompatActivity {
             @Override
             public void onDismiss(boolean confirmFlag, Object... values) {
                 String s = (String) values[0];
-                String oldValue = item.getName();
+                String oldName = item.getName();
                 if (TextUtils.isEmpty(s)) {
                     dialog.showError("请输入名称！");
                     return;
                 }
-                if (!oldValue.equals(s)) {
-                    if (dbManager.isExist(s)) {
+                if (!oldName.equals(s)) {
+                    if (DbManager.isExist(Item.class,"name = ?",s)){
                         dialog.showError("已存在该项目，请改名！");
                         return;
                     }
                     item.setName(s);
-                    dbManager.update(item,"name = ?",oldValue);
+                    DbManager.update(Item.class,item,"name = ?",oldName);
                     adapter.notifyItemChanged(position);
                 }
                 dialog.dismiss();
@@ -174,7 +172,7 @@ public class ItemManageActivity extends AppCompatActivity {
             @Override
             public void onDismiss(boolean confirmFlag, Object... values) {
                 if(confirmFlag){
-                    dbManager.dele(item);
+                    DbManager.dele(Item.class,"name = ?",item.getName());
                     itemList.remove(position);
                     adapter.notifyItemRemoved(position);
                 }

@@ -1,5 +1,6 @@
 package yzw.ahaqth.calculatehelper.views;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -33,13 +34,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import yzw.ahaqth.calculatehelper.R;
-import yzw.ahaqth.calculatehelper.manager.ItemDbManager;
-import yzw.ahaqth.calculatehelper.manager.RecordDetailsDbManager;
 import yzw.ahaqth.calculatehelper.moduls.AssignInMonthEntity;
 import yzw.ahaqth.calculatehelper.moduls.Item;
 import yzw.ahaqth.calculatehelper.moduls.RecordDetails;
 import yzw.ahaqth.calculatehelper.tools.BigDecimalHelper;
 import yzw.ahaqth.calculatehelper.tools.DateUtils;
+import yzw.ahaqth.calculatehelper.tools.DbManager;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
 import yzw.ahaqth.calculatehelper.views.adapters.ItemViewTypeSupport;
 import yzw.ahaqth.calculatehelper.views.adapters.MultiTypeAdapter;
@@ -118,7 +118,6 @@ public class InputActivity extends AppCompatActivity {
     private double totalAmount;
     private LocalDateTime recordTime; // 传入参数
     private Handler mHander;
-    private RecordDetailsDbManager recordDetailsDbManager;
     private boolean isWaiting;
     private boolean isBreak;
     private String itemName;
@@ -151,13 +150,13 @@ public class InputActivity extends AppCompatActivity {
         this.mHander = new Handler(new Handler.Callback() {
             @Override
             public boolean handleMessage(Message msg) {
-                switch (msg.what){
+                switch (msg.what) {
                     case 0x11:
-                        loadingDialog.show(getSupportFragmentManager(),"loading");
+                        loadingDialog.show(getSupportFragmentManager(), "loading");
                         break;
-                    case 0x01 :
+                    case 0x01:
                         Bundle bundle = msg.getData();
-                        String s = "已存在 " + bundle.getString("itemname") + bundle.getString("month")+
+                        String s = "已存在 " + bundle.getString("itemname") + bundle.getString("month") +
                                 " 的记录，\n点击【确定】合并金额，【取消】返回重新选择项目。";
                         DialogFactory confirmDialog = DialogFactory.getConfirmDialog(s);
                         confirmDialog.setDialogCallback(new DialogCallback() {
@@ -170,7 +169,7 @@ public class InputActivity extends AppCompatActivity {
                         confirmDialog.show(getSupportFragmentManager(), "confirmDialog");
                         break;
                     case 0x02:
-                        ToastFactory.showCenterToast(InputActivity.this,"数据已保存");
+                        ToastFactory.showCenterToast(InputActivity.this, "数据已保存");
                         reset();
                     case 0x10:
                         loadingDialog.dismiss();
@@ -179,7 +178,6 @@ public class InputActivity extends AppCompatActivity {
                 return true;
             }
         });
-        this.recordDetailsDbManager = new RecordDetailsDbManager(this);
         this.inputResults = new ArrayList<>();
         this.loadingDialog = LoadingDialog.getInstance("正在保存数据...");
     }
@@ -192,9 +190,9 @@ public class InputActivity extends AppCompatActivity {
         itemAmountEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                if(!hasFocus){
+                if (!hasFocus) {
                     ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
-                            .hideSoftInputFromWindow(itemAmountEditText.getWindowToken(),1000);
+                            .hideSoftInputFromWindow(itemAmountEditText.getWindowToken(), 1000);
                 }
             }
         });
@@ -251,11 +249,11 @@ public class InputActivity extends AppCompatActivity {
                 showItemList();
             }
         });
-        GridLayoutManager layoutManager = new GridLayoutManager(this,2);
+        GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
         layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
-                if(position == list.size() - 1)
+                if (position == list.size() - 1)
                     return 2;
                 return 1;
             }
@@ -272,7 +270,7 @@ public class InputActivity extends AppCompatActivity {
     }
 
     private void showItemList() {
-        items.addAll(new ItemDbManager(this).findAll());
+        items.addAll(DbManager.findAll(Item.class));
         if (items.isEmpty()) {
             DialogFactory dialogFactory = DialogFactory.getInfoDialog("项目列表为空，请先录入项目信息");
             dialogFactory.setDialogCallback(new DialogCallback() {
@@ -447,8 +445,8 @@ public class InputActivity extends AppCompatActivity {
                         continue;
                     AssignInMonthEntity entity = (AssignInMonthEntity) modul;
                     if (entity.isSelected) {
-                        RecordDetails details = recordDetailsDbManager.findOne("itemname = ? and recordtime = ? and month = ?",
-                                itemName, String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8))),String.valueOf(entity.month.toEpochDay()));
+                        RecordDetails details = DbManager.findFirst(RecordDetails.class, "itemname = ? and recordtime = ? and month = ?",
+                                itemName, String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8))), String.valueOf(entity.month.toEpochDay()));
                         if (details != null) {
                             isBreak = false;
                             isWaiting = true;
@@ -457,7 +455,7 @@ public class InputActivity extends AppCompatActivity {
                             message.what = 0x01;
                             Bundle bundle = new Bundle();
                             bundle.putString("itemname", itemName);
-                            bundle.putString("month",entity.month.format(DateUtils.getYyyyM_Formatter()));
+                            bundle.putString("month", entity.month.format(DateUtils.getYyyyM_Formatter()));
                             message.setData(bundle);
                             mHander.sendMessage(message);
 
@@ -475,8 +473,10 @@ public class InputActivity extends AppCompatActivity {
                                 mHander.sendMessage(message0);
                                 return;
                             } else {
-                                details.setAmount(BigDecimalHelper.add(entity.amount, details.getAmount()));
-                                recordDetailsDbManager.dele(details);
+                                ContentValues contentValues = new ContentValues();
+                                contentValues.put("amount",BigDecimalHelper.add(entity.amount, details.getAmount()));
+                                DbManager.update(RecordDetails.class, contentValues,"itemname = ? and recordtime = ? and month = ?",
+                                        itemName, String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8))), String.valueOf(entity.month.toEpochDay()));
                             }
                         } else {
                             details = new RecordDetails();
@@ -485,12 +485,12 @@ public class InputActivity extends AppCompatActivity {
                             details.setItemName(itemName);
                             details.setAmount(entity.amount);
                             details.setDataMode(DataMode.UNASSIGNED);
+                            inputResults.add(details);
                         }
-                        inputResults.add(details);
                     }
                 }
 
-                recordDetailsDbManager.save(inputResults);
+                DbManager.save(RecordDetails.class, inputResults);
 
                 Message message = mHander.obtainMessage();
                 message.what = 0x02;
@@ -512,7 +512,7 @@ public class InputActivity extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
             recordTime = LocalDateTime.ofEpochSecond(bundle.getLong("recordtime"), 0, ZoneOffset.ofHours(8));
-        }else{
+        } else {
             recordTime = LocalDateTime.now();
         }
 
@@ -534,19 +534,19 @@ public class InputActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        ToastFactory.showCenterToast(this,recordTime.format(DateUtils.getYyyyMdHHmmss_Formatter()));
+        ToastFactory.showCenterToast(this, recordTime.format(DateUtils.getYyyyMdHHmmss_Formatter()));
     }
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
-        outState.putLong("recordtime",recordTime.toEpochSecond(ZoneOffset.ofHours(8)));
+        outState.putLong("recordtime", recordTime.toEpochSecond(ZoneOffset.ofHours(8)));
         super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        recordTime = LocalDateTime.ofEpochSecond(savedInstanceState.getLong("recordtime"),0,ZoneOffset.ofHours(8));
+        recordTime = LocalDateTime.ofEpochSecond(savedInstanceState.getLong("recordtime"), 0, ZoneOffset.ofHours(8));
     }
 
 }

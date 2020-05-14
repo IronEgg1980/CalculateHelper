@@ -15,14 +15,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
 
 import yzw.ahaqth.calculatehelper.R;
-import yzw.ahaqth.calculatehelper.manager.RecordDetailsDbManager;
 import yzw.ahaqth.calculatehelper.moduls.RecordDetails;
 import yzw.ahaqth.calculatehelper.moduls.RecordDetailsGroupByItem;
 import yzw.ahaqth.calculatehelper.tools.DateUtils;
+import yzw.ahaqth.calculatehelper.tools.DbHelper;
+import yzw.ahaqth.calculatehelper.tools.DbManager;
+import yzw.ahaqth.calculatehelper.tools.DbTools;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseAdapter;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
@@ -36,14 +37,12 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private DrawerLayout drawerLayout;
     private LocalDateTime recordTime;
-    private RecordDetailsDbManager dbManager;
     private boolean hasUnsignedData = false,jumpFlag = true;
     private TextView recordTimeTextView;
 
     private void initial() {
         this.recordTime = LocalDateTime.now();
-        dbManager = new RecordDetailsDbManager(this);
-        dataList = dbManager.getUnassignedRecordGroupByItemList();
+        dataList = DbTools.getUnassignedRecordGroupByItem();
         if (!dataList.isEmpty()) {
             this.recordTime = dataList.get(0).getRecordTime();
             this.hasUnsignedData = true;
@@ -65,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
         recordTimeTextView.setText(s);
         dataList.clear();
 //        dataList.addAll(dbManager.find(recordTime));
-        dataList.addAll(dbManager.getRecordGroupByItemList(recordTime));
+//        dataList.addAll(DbTools.getRecordGroupByItemList(recordTime));
         adapter.notifyDataSetChanged();
     }
 
@@ -119,6 +118,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        DbHelper.initial(this);// 数据库初始化
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(null);
@@ -159,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDismiss(boolean confirmFlag, Object... values) {
                 hasUnsignedData = false;
                 if (!confirmFlag) {
-                    dbManager.dele("datamode = ?", String.valueOf(DataMode.UNASSIGNED.ordinal()));
+                    DbManager.dele(RecordDetails.class,"datamode = ?", String.valueOf(DataMode.UNASSIGNED.ordinal()));
                     recordTime = LocalDateTime.now();
                     jumpToInput();
                 } else {

@@ -149,8 +149,8 @@ public class RecordDetailsDbManager extends DbManager<RecordDetails> {
                 RecorDetailsGroupByMonth groupByMonth = new RecorDetailsGroupByMonth();
                 groupByMonth.setRecordTime(localDateTime);
                 groupByMonth.setMonth(LocalDate.ofEpochDay(month));
-
                 double totalAmount = 0;
+                DataMode mode = DataMode.UNASSIGNED;
                 StringBuilder note = new StringBuilder();
                 for (RecordDetails recordDetails : findList) {
                     totalAmount = BigDecimalHelper.add(totalAmount, recordDetails.getAmount());
@@ -159,7 +159,9 @@ public class RecordDetailsDbManager extends DbManager<RecordDetails> {
                             .append(" (")
                             .append(recordDetails.getAmount())
                             .append(")");
+                    mode = recordDetails.getDataMode();
                 }
+                groupByMonth.setDataMode(mode);
                 groupByMonth.setTotalAmount(totalAmount);
                 groupByMonth.setItemNote(note.toString().substring(1));
                 list.add(groupByMonth);

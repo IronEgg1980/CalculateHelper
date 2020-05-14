@@ -188,7 +188,9 @@ public class NumberInputPopWindow extends PopupWindow {
         String currentText = "";
         if(!TextUtils.isEmpty(tipsTextview.getText()))
             currentText = tipsTextview.getText().toString();
-        else if(".".equals(input) || "0".equals(input))
+        else if(".".equals(input))
+            return;
+        if("0".equals(currentText) && "0".equals(input))
             return;
         currentText = currentText+input;
         try {
