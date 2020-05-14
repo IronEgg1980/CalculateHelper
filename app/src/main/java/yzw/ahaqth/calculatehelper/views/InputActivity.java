@@ -445,7 +445,7 @@ public class InputActivity extends AppCompatActivity {
                         continue;
                     AssignInMonthEntity entity = (AssignInMonthEntity) modul;
                     if (entity.isSelected) {
-                        RecordDetails details = DbManager.findFirst(RecordDetails.class, "itemname = ? and recordtime = ? and month = ?",
+                        RecordDetails details = DbManager.findOne(RecordDetails.class, "itemname = ? and recordtime = ? and month = ?",
                                 itemName, String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8))), String.valueOf(entity.month.toEpochDay()));
                         if (details != null) {
                             isBreak = false;
@@ -475,7 +475,7 @@ public class InputActivity extends AppCompatActivity {
                             } else {
                                 ContentValues contentValues = new ContentValues();
                                 contentValues.put("amount",BigDecimalHelper.add(entity.amount, details.getAmount()));
-                                DbManager.update(RecordDetails.class, contentValues,"itemname = ? and recordtime = ? and month = ?",
+                                DbManager.updateAll(RecordDetails.class, contentValues,"itemname = ? and recordtime = ? and month = ?",
                                         itemName, String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8))), String.valueOf(entity.month.toEpochDay()));
                             }
                         } else {
@@ -490,7 +490,7 @@ public class InputActivity extends AppCompatActivity {
                     }
                 }
 
-                DbManager.save(RecordDetails.class, inputResults);
+                DbManager.saveAll(inputResults);
 
                 Message message = mHander.obtainMessage();
                 message.what = 0x02;

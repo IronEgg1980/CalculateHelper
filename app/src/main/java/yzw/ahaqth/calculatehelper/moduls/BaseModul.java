@@ -15,7 +15,7 @@ public abstract class BaseModul {
 
     public void save() {
         SQLiteDatabase database = DbHelper.getWriteDB();
-        ContentValues contentValues = DbManager.modul2ContentValues(this.getClass(),this);
+        ContentValues contentValues = DbManager.modul2ContentValues(this);
         if (contentValues != null) {
             database.insert(this.getClass().getSimpleName().toLowerCase(), null, contentValues);
         }
@@ -29,7 +29,7 @@ public abstract class BaseModul {
     }
 
     public void update(){
-        ContentValues contentValues = DbManager.modul2ContentValues(this.getClass(),this);
+        ContentValues contentValues = DbManager.modul2ContentValues(this);
         SQLiteDatabase database = DbHelper.getWriteDB();
         database.update(this.getClass().getSimpleName().toLowerCase(),contentValues, "id = ?", new String[]{String.valueOf(this.id)});
         database.close();

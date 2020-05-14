@@ -18,16 +18,15 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import yzw.ahaqth.calculatehelper.R;
-import yzw.ahaqth.calculatehelper.moduls.RecordDetails;
 import yzw.ahaqth.calculatehelper.moduls.RecordDetailsGroupByItem;
+import yzw.ahaqth.calculatehelper.moduls.Remain;
 import yzw.ahaqth.calculatehelper.tools.DateUtils;
 import yzw.ahaqth.calculatehelper.tools.DbHelper;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
-import yzw.ahaqth.calculatehelper.tools.DbTools;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseAdapter;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
-import yzw.ahaqth.calculatehelper.views.interfaces.DataMode;
+import yzw.ahaqth.calculatehelper.views.dialogs.ToastFactory;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
 public class MainActivity extends AppCompatActivity {
@@ -42,13 +41,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void initial() {
         this.recordTime = LocalDateTime.now();
-        dataList = DbTools.getUnassignedRecordGroupByItem();
+        dataList = DbManager.getUnassignedRecordGroupByItem();
         if (!dataList.isEmpty()) {
             this.recordTime = dataList.get(0).getRecordTime();
             this.hasUnsignedData = true;
             this.jumpFlag = false;
         }
-        dataList.clear();
         adapter = new BaseAdapter<RecordDetailsGroupByItem>(R.layout.recordgroupbyitem_item_layout, dataList) {
             @Override
             public void bindData(BaseViewHolder baseViewHolder, RecordDetailsGroupByItem data) {
@@ -63,8 +61,7 @@ public class MainActivity extends AppCompatActivity {
         String s = "当前记录时间：" + recordTime.format(DateUtils.getYyyyMdHHmmss_Formatter());
         recordTimeTextView.setText(s);
         dataList.clear();
-//        dataList.addAll(dbManager.find(recordTime));
-//        dataList.addAll(DbTools.getRecordGroupByItemList(recordTime));
+        dataList.addAll(DbManager.getRecordGroupByItem(recordTime));
         adapter.notifyDataSetChanged();
     }
 
@@ -106,12 +103,27 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, ItemManageActivity.class));
             }
         });
+        findViewById(R.id.menu_remain).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawerLayout.closeDrawers();
+                showRemain((TextView) v);
+            }
+        });
     }
 
     private void jumpToInput(){
         Intent intent = new Intent(MainActivity.this,InputActivity.class);
         intent.putExtra("recordtime",recordTime.toEpochSecond(ZoneOffset.ofHours(8)));
         startActivity(intent);
+    }
+
+    private void showRemain(TextView textView){
+        Remain remain = DbManager.findFirst(Remain.class);
+        double remainValue = remain!=null?remain.getAmount():0;
+        String s = "查询余额（"+remainValue+"）";
+        textView.setText(s);
+        ToastFactory.showCenterToast(this,String.valueOf(remainValue));
     }
 
     @Override
@@ -161,7 +173,8 @@ public class MainActivity extends AppCompatActivity {
             public void onDismiss(boolean confirmFlag, Object... values) {
                 hasUnsignedData = false;
                 if (!confirmFlag) {
-                    DbManager.dele(RecordDetails.class,"datamode = ?", String.valueOf(DataMode.UNASSIGNED.ordinal()));
+//                    DbManager.deleAll(RecordDetails.class,"datamode = ?", String.valueOf(DataMode.UNASSIGNED.ordinal()));
+                    DbManager.rollBack(recordTime);
                     recordTime = LocalDateTime.now();
                     jumpToInput();
                 } else {

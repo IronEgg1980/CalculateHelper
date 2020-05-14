@@ -1,6 +1,5 @@
 package yzw.ahaqth.calculatehelper.views;
 
-import android.content.ContentValues;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -23,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import yzw.ahaqth.calculatehelper.R;
-import yzw.ahaqth.calculatehelper.moduls.RecordDetails;
+import yzw.ahaqth.calculatehelper.tools.DbHelper;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
 import yzw.ahaqth.calculatehelper.moduls.AssignDetails;
 import yzw.ahaqth.calculatehelper.moduls.AssignGroupByPerson;
@@ -32,7 +31,6 @@ import yzw.ahaqth.calculatehelper.moduls.RecordDetailsGroupByMonth;
 import yzw.ahaqth.calculatehelper.moduls.RemainDetails;
 import yzw.ahaqth.calculatehelper.tools.BigDecimalHelper;
 import yzw.ahaqth.calculatehelper.tools.DateUtils;
-import yzw.ahaqth.calculatehelper.tools.DbTools;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseAdapter;
 import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
@@ -42,6 +40,7 @@ import yzw.ahaqth.calculatehelper.views.interfaces.DataMode;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
 public class AssignActivity extends AppCompatActivity {
+    private static final String TAG = "殷宗旺";
     private LocalDateTime recordTime;
     private RecyclerView recyclerView1;
     private AppCompatToggleButton autoAssignTB;
@@ -51,6 +50,7 @@ public class AssignActivity extends AppCompatActivity {
     private List<AssignGroupByPerson> assignGroupByPersonList;
     private List<RecordDetailsGroupByMonth> recordDetailsGroupByMonthList;
     private BaseAdapter<RecordDetailsGroupByMonth> recordDetailsAdapter;
+    private BaseAdapter<AssignGroupByPerson> assignAdapter;
 
     private List<Person> personList;
     private BaseAdapter<Person> personAdapter;
@@ -59,7 +59,9 @@ public class AssignActivity extends AppCompatActivity {
     private void initial() {
         this.currentIndex = -1;
         this.personList = DbManager.findAll(Person.class);
-        this.recordDetailsGroupByMonthList = DbTools.getRecordGroupByMonthList(recordTime);
+        this.recordDetailsGroupByMonthList = DbManager.getRecordGroupByMonth(recordTime);
+        this.assignGroupByPersonList = DbManager.getAssignGroupByPersonList(recordTime);
+
         this.recordDetailsAdapter = new BaseAdapter<RecordDetailsGroupByMonth>(R.layout.assign_recorddetailslist_item, recordDetailsGroupByMonthList) {
             @Override
             public void bindData(final BaseViewHolder baseViewHolder, final RecordDetailsGroupByMonth data) {
@@ -70,12 +72,12 @@ public class AssignActivity extends AppCompatActivity {
                 baseViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        currentIndex = baseViewHolder.getAdapterPosition();
                         if (data.getDataMode() == DataMode.UNASSIGNED) {
-                            currentIndex = baseViewHolder.getAdapterPosition();
                             maxDay = recordDetailsGroupByMonthList.get(currentIndex).getMonth().lengthOfMonth();
                             changeAdapter(2);
                         } else {
-                            ToastFactory.showCenterToast(AssignActivity.this, "该月份已分配");
+                            showReAssignDialog();
                         }
                     }
                 });
@@ -122,6 +124,15 @@ public class AssignActivity extends AppCompatActivity {
                         manualAssign(baseViewHolder.getAdapterPosition());
                     }
                 });
+            }
+        };
+        this.assignAdapter = new BaseAdapter<AssignGroupByPerson>(R.layout.assign_recorddetailslist_item, assignGroupByPersonList) {
+            @Override
+            public void bindData(BaseViewHolder baseViewHolder, AssignGroupByPerson data) {
+                baseViewHolder.setText(R.id.monthTextView, data.getPersonName());
+                baseViewHolder.setText(R.id.amountTextView, "总金额：" + data.getAssignAmount());
+                baseViewHolder.setText(R.id.noteTextView, "明细：" + data.getMonthList());
+                baseViewHolder.setText(R.id.datamodeTextView, data.getOffDaysNote());
             }
         };
     }
@@ -212,6 +223,31 @@ public class AssignActivity extends AppCompatActivity {
         dialog.show(getSupportFragmentManager(), "inputnumber");
     }
 
+    private void showReAssignDialog(){
+        DialogFactory dialogFactory = DialogFactory.getConfirmDialog("该月份已分配，是否要重新分配？");
+        dialogFactory.setDialogCallback(new DialogCallback() {
+            @Override
+            public void onDismiss(boolean confirmFlag, Object... values) {
+                if(confirmFlag){
+                    reAssign();
+                }
+            }
+        });
+        dialogFactory.show(getSupportFragmentManager(),"reassign");
+    }
+
+    private void reAssign(){
+        RecordDetailsGroupByMonth recordDetailsGroupByMonth = recordDetailsGroupByMonthList.get(currentIndex);
+        if(DbManager.rollBackAssign(recordDetailsGroupByMonth.getRecordTime(),recordDetailsGroupByMonth.getMonth())){
+            recordDetailsGroupByMonth.setDataMode(DataMode.UNASSIGNED);
+            recordDetailsAdapter.notifyItemChanged(currentIndex);
+            currentIndex = -1;
+            maxDay = 30;
+        }else{
+            ToastFactory.showCenterToast(this,"操作失败");
+        }
+    }
+
     private boolean save() {
         List<AssignDetails> list = new ArrayList<>();
         RecordDetailsGroupByMonth record = recordDetailsGroupByMonthList.get(currentIndex);
@@ -240,28 +276,13 @@ public class AssignActivity extends AppCompatActivity {
         remainDetails.setRecordTime(recordTime);
         remainDetails.setMonth(record.getMonth());
         remainDetails.setVariableAmount(remainValue);
-        return DbTools.saveTogether(list, remainDetails);
-    }
-
-
-    private void onSaved() {
-        DbTools.changeDataMode(recordDetailsGroupByMonthList.get(currentIndex),DataMode.ASSIGNED);
-
-        currentIndex = -1;
-        maxDay = 30;
+        return DbManager.saveAssignData(list, remainDetails);
     }
 
     private void showAssignDetails() {
-        this.assignGroupByPersonList = DbTools.getAssignGroupByPersonList(recordTime);
-        BaseAdapter<AssignGroupByPerson> assignAdapter = new BaseAdapter<AssignGroupByPerson>(R.layout.assign_recorddetailslist_item, assignGroupByPersonList) {
-            @Override
-            public void bindData(BaseViewHolder baseViewHolder, AssignGroupByPerson data) {
-                baseViewHolder.setText(R.id.monthTextView, data.getPersonName());
-                baseViewHolder.setText(R.id.amountTextView, "总金额：" + data.getAssignAmount());
-                baseViewHolder.setText(R.id.noteTextView, "明细：" + data.getMonthList());
-                baseViewHolder.setText(R.id.datamodeTextView, data.getOffDaysNote());
-            }
-        };
+        this.assignGroupByPersonList.clear();
+        this.assignGroupByPersonList.addAll(DbManager.getAssignGroupByPersonList(recordTime));
+        assignAdapter.notifyDataSetChanged();
         recyclerView1.setAdapter(assignAdapter);
     }
 
@@ -275,9 +296,13 @@ public class AssignActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (save()) {
-                    onSaved();
+                    recordDetailsGroupByMonthList.get(currentIndex).setDataMode(DataMode.ASSIGNED);
+                    currentIndex = -1;
+                    maxDay = 30;
                     resetPersonList();
                     changeAdapter(1);
+                }else{
+                    ToastFactory.showCenterToast(AssignActivity.this,"保存数据失败");
                 }
             }
         });

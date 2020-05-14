@@ -119,7 +119,7 @@ public class ItemManageActivity extends AppCompatActivity {
 
                 Item item = new Item();
                 item.setName(s);
-                DbManager.save(Item.class,item);
+                item.save();
                 itemList.add(position, item);
 
                 dialog.dismiss();
@@ -151,7 +151,7 @@ public class ItemManageActivity extends AppCompatActivity {
                         return;
                     }
                     item.setName(s);
-                    DbManager.update(Item.class,item,"name = ?",oldName);
+                    item.update();
                     adapter.notifyItemChanged(position);
                 }
                 dialog.dismiss();
@@ -172,7 +172,7 @@ public class ItemManageActivity extends AppCompatActivity {
             @Override
             public void onDismiss(boolean confirmFlag, Object... values) {
                 if(confirmFlag){
-                    DbManager.dele(Item.class,"name = ?",item.getName());
+                    item.dele();
                     itemList.remove(position);
                     adapter.notifyItemRemoved(position);
                 }

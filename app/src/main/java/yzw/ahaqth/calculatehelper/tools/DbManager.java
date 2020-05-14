@@ -17,7 +17,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import yzw.ahaqth.calculatehelper.moduls.AssignDetails;
+import yzw.ahaqth.calculatehelper.moduls.AssignGroupByPerson;
 import yzw.ahaqth.calculatehelper.moduls.BaseModul;
+import yzw.ahaqth.calculatehelper.moduls.RecordDetails;
+import yzw.ahaqth.calculatehelper.moduls.RecordDetailsGroupByItem;
+import yzw.ahaqth.calculatehelper.moduls.RecordDetailsGroupByMonth;
 import yzw.ahaqth.calculatehelper.moduls.Remain;
 import yzw.ahaqth.calculatehelper.moduls.RemainDetails;
 import yzw.ahaqth.calculatehelper.views.interfaces.DataMode;
@@ -163,15 +167,15 @@ public abstract class DbManager {
         }
     }
 
-    public static <T extends BaseModul> int saveAll(Class<T> clazz, List<T> list) {
+    public static <T extends BaseModul> int saveAll(List<T> list) {
         int i = 0;
         SQLiteDatabase database = DbHelper.getWriteDB();
         database.beginTransaction();
         try {
             for (T t : list) {
-                ContentValues contentValues = modul2ContentValues(clazz, t);
+                ContentValues contentValues = modul2ContentValues(t);
                 if (contentValues != null) {
-                    database.insert(clazz.getSimpleName().toLowerCase(), null, contentValues);
+                    database.insert(t.getClass().getSimpleName().toLowerCase(), null, contentValues);
                     i += 1;
                 }
             }
@@ -186,28 +190,24 @@ public abstract class DbManager {
         return i;
     }
 
-    public static  <T extends BaseModul> void dele(Class<T> clazz, String whereClause, String... conditions) {
+    public static <T extends BaseModul> void deleAll(Class<T> clazz, String whereClause, String... conditions) {
         SQLiteDatabase database = DbHelper.getWriteDB();
         database.delete(clazz.getSimpleName().toLowerCase(), whereClause, conditions);
         database.close();
     }
 
-    public static  <T extends BaseModul> void deleAll(Class<T> clazz) {
-        dele(clazz, null);
-    }
-
-    public static  <T extends BaseModul> void update(Class<T> clazz, ContentValues contentValues, String whereClause, String... conditions) {
+    public static <T extends BaseModul> void updateAll(Class<T> clazz, ContentValues contentValues, String whereClause, String... conditions) {
         SQLiteDatabase database = DbHelper.getWriteDB();
         database.update(clazz.getSimpleName().toLowerCase(), contentValues, whereClause, conditions);
         database.close();
     }
 
-    public static  <T extends BaseModul> void update(Class<T> clazz, T newT, String whereClause, String... conditions) {
-        ContentValues contentValues = modul2ContentValues(clazz, newT);
-        update(clazz,contentValues,whereClause,conditions);
+    public static <T extends BaseModul> void updateAll(Class<T> clazz, T newT, String whereClause, String... conditions) {
+        ContentValues contentValues = modul2ContentValues(newT);
+        updateAll(clazz, contentValues, whereClause, conditions);
     }
 
-    public static  <T extends BaseModul> List<T> findBySql(Class<T> clazz, String sql, String... selectionArgs) {
+    public static <T extends BaseModul> List<T> findBySql(Class<T> clazz, String sql, String... selectionArgs) {
         List<T> list = new ArrayList<>();
         SQLiteDatabase database = DbHelper.getReadDB();
         Cursor cursor = database.rawQuery(sql, selectionArgs);
@@ -224,9 +224,9 @@ public abstract class DbManager {
         return list;
     }
 
-    public static  <T extends BaseModul> List<T> find(Class<T> clazz, boolean distinct, String selection,
-                            String[] selectionArgs, String groupBy, String having,
-                            String orderBy) {
+    public static <T extends BaseModul> List<T> find(Class<T> clazz, boolean distinct, String selection,
+                                                     String[] selectionArgs, String groupBy, String having,
+                                                     String orderBy) {
         List<T> list = new ArrayList<>();
         SQLiteDatabase database = DbHelper.getReadDB();
         Cursor cursor = database.query(distinct, clazz.getSimpleName().toLowerCase(), null, selection, selectionArgs, groupBy, having, orderBy, null);
@@ -243,15 +243,15 @@ public abstract class DbManager {
         return list;
     }
 
-    public static  <T extends BaseModul> List<T> find(Class<T> clazz, String selection, String... selectionArgs) {
+    public static <T extends BaseModul> List<T> find(Class<T> clazz, String selection, String... selectionArgs) {
         return find(clazz, false, selection, selectionArgs, null, null, null);
     }
 
-    public static  <T extends BaseModul> List<T> findAll(Class<T> clazz) {
+    public static <T extends BaseModul> List<T> findAll(Class<T> clazz) {
         return find(clazz, null);
     }
 
-    public static  <T extends BaseModul> T findFirst(Class<T> clazz) {
+    public static <T extends BaseModul> T findFirst(Class<T> clazz) {
         T t = null;
         SQLiteDatabase database = DbHelper.getReadDB();
         Cursor cursor = database.query(false, clazz.getSimpleName().toLowerCase(), null,
@@ -264,7 +264,7 @@ public abstract class DbManager {
         return t;
     }
 
-    public static  <T extends BaseModul> T findLast(Class<T> clazz) {
+    public static <T extends BaseModul> T findLast(Class<T> clazz) {
         T t = null;
         SQLiteDatabase database = DbHelper.getReadDB();
         Cursor cursor = database.query(false, clazz.getSimpleName().toLowerCase(), null,
@@ -277,7 +277,7 @@ public abstract class DbManager {
         return t;
     }
 
-    public static  <T extends BaseModul> T findFirst(Class<T> clazz,String selection,String...args) {
+    public static <T extends BaseModul> T findOne(Class<T> clazz, String selection, String... args) {
         T t = null;
         SQLiteDatabase database = DbHelper.getReadDB();
         Cursor cursor = database.query(false, clazz.getSimpleName().toLowerCase(), null,
@@ -290,28 +290,323 @@ public abstract class DbManager {
         return t;
     }
 
-    public static  <T extends BaseModul> T findLast(Class<T> clazz,String selection,String...args) {
-        T t = null;
-        SQLiteDatabase database = DbHelper.getReadDB();
-        Cursor cursor = database.query(false, clazz.getSimpleName().toLowerCase(), null,
-                selection, args, null, null, "id DESC", null);
-        if (cursor.moveToFirst()) {
-            t = cursor2Modul(clazz, cursor);
-        }
-        cursor.close();
-        database.close();
-        return t;
-    }
-
-    public static  boolean isEmpty(Class clazz) {
+    public static boolean isEmpty(Class clazz) {
         return findAll(clazz).isEmpty();
     }
 
-    public static  <T extends BaseModul> boolean isSaved(Class<T> clazz, T t) {
-        return !find(clazz, "id = ?", String.valueOf(t.getId())).isEmpty();
-    }
-
-    public static  <T extends BaseModul> boolean isExist(Class<T> clazz, String selection, String... selectionArgs) {
+    public static <T extends BaseModul> boolean isExist(Class<T> clazz, String selection, String... selectionArgs) {
         return !find(clazz, selection, selectionArgs).isEmpty();
     }
+
+    public static boolean rollBack(LocalDateTime recordTime) {
+        boolean result = false;
+
+        String selection = "recordtime = ? ";
+        String[] args = new String[]{String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8)))};
+
+        Remain remain = findFirst(Remain.class);
+        double remainValue = remain == null ? 0 : remain.getAmount();
+
+        RemainDetails remainDetails = findOne(RemainDetails.class, selection, args);
+        double remainDetailsValue = remainDetails == null ? 0 : remainDetails.getVariableAmount();
+
+        SQLiteDatabase sqLiteDatabase = DbHelper.getWriteDB();
+        sqLiteDatabase.beginTransaction();
+
+        try {
+            ContentValues contentValues1 = new ContentValues();
+            contentValues1.put("amount", BigDecimalHelper.minus(remainValue, remainDetailsValue));
+            sqLiteDatabase.update(Remain.class.getSimpleName().toLowerCase(), contentValues1, null, null);
+
+            sqLiteDatabase.delete(AssignDetails.class.getSimpleName(), selection, args);
+            sqLiteDatabase.delete(RemainDetails.class.getSimpleName(), selection, args);
+            sqLiteDatabase.delete(RecordDetails.class.getSimpleName(), selection, args);
+
+            sqLiteDatabase.setTransactionSuccessful();
+            result = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "rollBack error,Message : " + e.getLocalizedMessage());
+        } finally {
+            sqLiteDatabase.endTransaction();
+            sqLiteDatabase.close();
+            Log.d(TAG, "saveData: success！");
+        }
+        return result;
+    }
+
+    public static boolean saveAssignData(List<AssignDetails> list, RemainDetails remainDetails) {
+        boolean result;
+        Remain remain = findFirst(Remain.class);
+
+        String[] args = {String.valueOf(remainDetails.getRecordTime().toEpochSecond(ZoneOffset.ofHours(8))),
+                String.valueOf(remainDetails.getMonth().toEpochDay())};
+
+        SQLiteDatabase sqLiteDatabase = DbHelper.getWriteDB();
+        sqLiteDatabase.beginTransaction();
+        try {
+            for (AssignDetails assignDetails : list) {
+                ContentValues contentValues = DbManager.modul2ContentValues(assignDetails);
+                if (contentValues != null) {
+                    sqLiteDatabase.insert(AssignDetails.class.getSimpleName().toLowerCase(), null, contentValues);
+                }
+            }
+            if (remain == null) {
+                ContentValues contentValues = new ContentValues();
+                contentValues.put("amount", remainDetails.getVariableAmount());
+                sqLiteDatabase.insert(Remain.class.getSimpleName().toLowerCase(), null, contentValues);
+            } else {
+                ContentValues contentValues = new ContentValues();
+                contentValues.put("amount", BigDecimalHelper.add(remain.getAmount(), remainDetails.getVariableAmount()));
+                sqLiteDatabase.update(Remain.class.getSimpleName().toLowerCase(), contentValues, null, null);
+            }
+
+            ContentValues contentValues1 = DbManager.modul2ContentValues(remainDetails);
+            sqLiteDatabase.insert(RemainDetails.class.getSimpleName().toLowerCase(), null, contentValues1);
+
+            ContentValues contentValues2 = new ContentValues();
+            contentValues2.put("datamode", DataMode.ASSIGNED.ordinal());
+            sqLiteDatabase.update(RecordDetails.class.getSimpleName(), contentValues2, "recordtime = ? and month = ?", args);
+
+            sqLiteDatabase.setTransactionSuccessful();
+            result = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = false;
+            Log.d(TAG, "saveData: error,Message : " + e.getLocalizedMessage());
+        } finally {
+            sqLiteDatabase.endTransaction();
+            sqLiteDatabase.close();
+            Log.d(TAG, "saveData: success！");
+        }
+        return result;
+    }
+
+    public static boolean rollBackAssign(LocalDateTime recordTime, LocalDate month) {
+        boolean result = false;
+        String selection = "recordtime = ? and month = ?";
+        String[] args = new String[]{String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8))), String.valueOf(month.toEpochDay())};
+
+        Remain remain = findFirst(Remain.class);
+        double remainValue = remain == null ? 0 : remain.getAmount();
+
+        RemainDetails remainDetails = findOne(RemainDetails.class, selection, args);
+        double remainDetailsValue = remainDetails == null ? 0 : remainDetails.getVariableAmount();
+
+        SQLiteDatabase sqLiteDatabase = DbHelper.getWriteDB();
+        sqLiteDatabase.beginTransaction();
+
+        try {
+            ContentValues contentValues1 = new ContentValues();
+            contentValues1.put("amount", BigDecimalHelper.minus(remainValue, remainDetailsValue));
+            sqLiteDatabase.update(Remain.class.getSimpleName().toLowerCase(), contentValues1, null, null);
+
+            sqLiteDatabase.delete(AssignDetails.class.getSimpleName(), selection, args);
+            sqLiteDatabase.delete(RemainDetails.class.getSimpleName(), selection, args);
+
+            ContentValues contentValues2 = new ContentValues();
+            contentValues2.put("datamode", DataMode.UNASSIGNED.ordinal());
+            sqLiteDatabase.update(RecordDetails.class.getSimpleName(), contentValues2, selection, args);
+
+            sqLiteDatabase.setTransactionSuccessful();
+            result = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "rollBack error,Message : " + e.getLocalizedMessage());
+        } finally {
+            sqLiteDatabase.endTransaction();
+            sqLiteDatabase.close();
+            Log.d(TAG, "saveData: success！");
+        }
+        return result;
+    }
+
+    public static int count(String tableName, String column, String selection, String... selectionArgs) {
+        SQLiteDatabase database = DbHelper.getReadDB();
+        Cursor cursor = database.query(true, tableName, new String[]{column}, selection, selectionArgs, column, null, column, null);
+        int count = cursor.getCount();
+        cursor.close();
+        database.close();
+        return count;
+    }
+
+    public static List<RecordDetailsGroupByItem> getUnassignedRecordGroupByItem() {
+        List<RecordDetails> list = find(RecordDetails.class,
+                false,
+                "datamode = ?",
+                new String[]{String.valueOf(DataMode.UNASSIGNED.ordinal())},
+                null,
+                null,
+                "itemname,month");
+        return getRecordGroupByItem(list);
+    }
+
+    public static List<RecordDetailsGroupByItem> getRecordGroupByItem(LocalDateTime recordTime) {
+        List<RecordDetails> list = find(RecordDetails.class,
+                false,
+                "recordtime = ?",
+                new String[]{String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8)))},
+                null,
+                null,
+                "itemname,month");
+        return getRecordGroupByItem(list);
+    }
+
+    public static List<RecordDetailsGroupByItem> getRecordGroupByItem(List<RecordDetails> list) {
+        List<RecordDetailsGroupByItem> result = new ArrayList<>();
+        if (!list.isEmpty()) {
+            String itemName = list.get(0).getItemName();
+            double totalAmount = 0;
+            LocalDateTime recordTime = list.get(0).getRecordTime();
+
+            StringBuilder note = new StringBuilder();
+            for (RecordDetails details : list) {
+                if (!itemName.equals(details.getItemName())) {
+                    RecordDetailsGroupByItem recordDetailsGroupByItem = new RecordDetailsGroupByItem();
+                    recordDetailsGroupByItem.setRecordTime(recordTime);
+                    recordDetailsGroupByItem.setItemName(itemName);
+                    recordDetailsGroupByItem.setMonthNote(note.substring(1));
+                    recordDetailsGroupByItem.setTotalAmount(totalAmount);
+                    result.add(recordDetailsGroupByItem);
+
+                    note.delete(0, note.length());
+                    totalAmount = 0;
+                }
+                itemName = details.getItemName();
+                recordTime = details.getRecordTime();
+                totalAmount = BigDecimalHelper.add(totalAmount, details.getAmount());
+                note.append("\n")
+                        .append(details.getMonth().format(DateUtils.getYyyyM_Formatter()))
+                        .append(" : ")
+                        .append(details.getAmount())
+                        .append(" (")
+                        .append(details.getDataMode().getDescribe())
+                        .append(")");
+            }
+            RecordDetailsGroupByItem last = new RecordDetailsGroupByItem();
+            last.setRecordTime(recordTime);
+            last.setItemName(itemName);
+            last.setMonthNote(note.substring(1));
+            last.setTotalAmount(totalAmount);
+            result.add(last);
+        }
+        return result;
+    }
+
+    public static List<RecordDetailsGroupByMonth> getRecordGroupByMonth(List<RecordDetails> list) {
+        List<RecordDetailsGroupByMonth> result = new ArrayList<>();
+        if (!list.isEmpty()) {
+            LocalDateTime recordTime = list.get(0).getRecordTime();
+            LocalDate month = list.get(0).getMonth();
+            double totalAmount = 0;
+            DataMode dataMode = list.get(0).getDataMode();
+            StringBuilder itemNote = new StringBuilder();
+
+            for (RecordDetails details : list) {
+                if (!month.isEqual(details.getMonth())) {
+                    RecordDetailsGroupByMonth recordDetailsGroupByMonth = new RecordDetailsGroupByMonth();
+                    recordDetailsGroupByMonth.setRecordTime(recordTime);
+                    recordDetailsGroupByMonth.setMonth(month);
+                    recordDetailsGroupByMonth.setDataMode(dataMode);
+                    recordDetailsGroupByMonth.setTotalAmount(totalAmount);
+                    recordDetailsGroupByMonth.setItemNote(itemNote.substring(1));
+                    result.add(recordDetailsGroupByMonth);
+
+                    totalAmount = 0;
+                    itemNote.delete(0, itemNote.length());
+                }
+                month = details.getMonth();
+                totalAmount = BigDecimalHelper.add(totalAmount, details.getAmount());
+                dataMode = details.getDataMode();
+                itemNote.append("、")
+                        .append(details.getItemName())
+                        .append("(")
+                        .append(details.getAmount())
+                        .append(")");
+
+            }
+            RecordDetailsGroupByMonth last = new RecordDetailsGroupByMonth();
+            last.setRecordTime(recordTime);
+            last.setMonth(month);
+            last.setDataMode(dataMode);
+            last.setTotalAmount(totalAmount);
+            last.setItemNote(itemNote.substring(1));
+            result.add(last);
+        }
+        return result;
+    }
+
+    public static List<RecordDetailsGroupByMonth> getRecordGroupByMonth(LocalDateTime recordTime) {
+        List<RecordDetails> list = DbManager.find(RecordDetails.class,
+                false,
+                "recordtime = ?",
+                new String[]{String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8)))},
+                null,
+                null,
+                "month,itemname");
+        return getRecordGroupByMonth(list);
+    }
+
+    public static List<AssignGroupByPerson> getAssignGroupByPerson(List<AssignDetails> list) {
+        List<AssignGroupByPerson> resultList = new ArrayList<>();
+        if (!list.isEmpty()) {
+            LocalDateTime localDateTime = list.get(0).getRecordTime();
+            String personName = list.get(0).getPersonName();
+            double amount = 0;
+            StringBuilder monthList = new StringBuilder();
+            StringBuilder offDaysNote = new StringBuilder();
+
+
+            for (AssignDetails assignDetails : list) {
+                if (!assignDetails.getPersonName().equals(personName)) {
+                    AssignGroupByPerson assignGroupByPerson = new AssignGroupByPerson();
+                    assignGroupByPerson.setRecordTime(localDateTime);
+                    assignGroupByPerson.setPersonName(personName);
+                    assignGroupByPerson.setMonthList(monthList.substring(1));
+                    assignGroupByPerson.setAssignAmount(amount);
+                    assignGroupByPerson.setOffDaysNote(offDaysNote.length() > 1 ? offDaysNote.substring(1) : "");
+                    resultList.add(assignGroupByPerson);
+
+                    amount = 0;
+                    monthList.delete(0, monthList.length());
+                    offDaysNote.delete(0, offDaysNote.length());
+                }
+                personName = assignDetails.getPersonName();
+                amount = BigDecimalHelper.add(amount, assignDetails.getAssignAmount());
+                monthList.append("、")
+                        .append(assignDetails.getMonth().format(DateUtils.getYyyyM_Formatter()))
+                        .append("（")
+                        .append(assignDetails.getAssignAmount())
+                        .append("）");
+                if (BigDecimalHelper.compare(assignDetails.getOffDays(), 0) > 0) {
+                    offDaysNote.append("、")
+                            .append(assignDetails.getMonth().format(DateUtils.getYyyyM_Formatter()))
+                            .append("缺勤 ")
+                            .append(assignDetails.getOffDays())
+                            .append(" 天");
+                }
+            }
+
+            AssignGroupByPerson assignGroupByPerson = new AssignGroupByPerson();
+            assignGroupByPerson.setRecordTime(localDateTime);
+            assignGroupByPerson.setPersonName(personName);
+            assignGroupByPerson.setMonthList(monthList.substring(1));
+            assignGroupByPerson.setAssignAmount(amount);
+            assignGroupByPerson.setOffDaysNote(offDaysNote.length() > 1 ? offDaysNote.substring(1) : "");
+            resultList.add(assignGroupByPerson);
+        }
+        return resultList;
+    }
+
+    public static List<AssignGroupByPerson> getAssignGroupByPersonList(LocalDateTime localDateTime) {
+        List<AssignDetails> findList = DbManager.find(AssignDetails.class,
+                false,
+                "recordtime = ?",
+                new String[]{String.valueOf(localDateTime.toEpochSecond(ZoneOffset.ofHours(8)))},
+                null,
+                null,
+                "personname,month");
+        return getAssignGroupByPerson(findList);
+    }
+
 }

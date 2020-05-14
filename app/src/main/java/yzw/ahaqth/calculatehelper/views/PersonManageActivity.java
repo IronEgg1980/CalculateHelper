@@ -145,7 +145,7 @@ public class PersonManageActivity extends AppCompatActivity {
                         return;
                     }
                     person.setName(s);
-                    DbManager.update(Person.class,person,"name  = ?",oldName);
+                    person.update();
                     adapter.notifyItemChanged(position);
                 }
                 dialog.dismiss();
@@ -162,10 +162,9 @@ public class PersonManageActivity extends AppCompatActivity {
         person.setName(name);
 //        DbManager.save(Person.class,person);
         person.save();
-        personList.add(position,person);
+        personList.add(position,DbManager.findLast(Person.class));
         adapter.notifyDataSetChanged();
         recyclerView.smoothScrollToPosition(position + 1);
-
     }
 
     private void delePerson(final int position){

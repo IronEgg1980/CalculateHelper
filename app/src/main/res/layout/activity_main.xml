@@ -75,6 +75,10 @@
                     android:id="@+id/menu_assign"
                     android:text="分配"
                     style="@style/MenuTextView"/>
+                <TextView
+                    android:id="@+id/menu_remain"
+                    android:text="查询余额"
+                    style="@style/MenuTextView"/>
 
                 <View
                     android:layout_width="match_parent"
