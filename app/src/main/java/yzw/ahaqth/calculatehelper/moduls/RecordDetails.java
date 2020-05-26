@@ -3,9 +3,11 @@ package yzw.ahaqth.calculatehelper.moduls;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import yzw.ahaqth.calculatehelper.tools.DateUtils;
+import yzw.ahaqth.calculatehelper.views.BrokenLineGraph;
 import yzw.ahaqth.calculatehelper.views.interfaces.DataMode;
 
-public class RecordDetails extends BaseModul {
+public class RecordDetails extends BaseModul implements BrokenLineGraph.BrokenLineGraphEntity {
     private LocalDateTime recordTime;
     private LocalDate month;
     private String itemName;
@@ -51,5 +53,15 @@ public class RecordDetails extends BaseModul {
 
     public void setDataMode(DataMode dataMode) {
         this.dataMode = dataMode;
+    }
+
+    @Override
+    public String getLabel() {
+        return month.format(DateUtils.getYyyyM_Formatter());
+    }
+
+    @Override
+    public double getValue() {
+        return amount;
     }
 }

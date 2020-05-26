@@ -4,8 +4,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import yzw.ahaqth.calculatehelper.tools.BigDecimalHelper;
+import yzw.ahaqth.calculatehelper.tools.DateUtils;
+import yzw.ahaqth.calculatehelper.views.BrokenLineGraph;
 
-public class AssignDetails extends BaseModul {
+public class AssignDetails extends BaseModul implements BrokenLineGraph.BrokenLineGraphEntity {
     private LocalDateTime recordTime;
     private LocalDate month;
     private String personName;
@@ -54,5 +56,15 @@ public class AssignDetails extends BaseModul {
 
     public double getAssignRatio(int maxDays){
         return BigDecimalHelper.divide(BigDecimalHelper.minus(maxDays,this.offDays),maxDays,2);
+    }
+
+    @Override
+    public String getLabel() {
+        return month.format(DateUtils.getYyyyM_Formatter());
+    }
+
+    @Override
+    public double getValue() {
+        return assignAmount;
     }
 }

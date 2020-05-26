@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -34,18 +35,15 @@ public class ItemManageActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.toolbar_recyclerview_layout);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle("项目管理");
-        setSupportActionBar(toolbar);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+        TextView titleTextView = findViewById(R.id.titleTextView);
+        titleTextView.setText("记录项目管理");
+        findViewById(R.id.navagationIco).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onBackPressed();
             }
         });
-
         generateData();
-
         adapter = new MultiTypeAdapter(itemList) {
             @Override
             public void bindData(final BaseViewHolder baseViewHolder, MultiTypeModul data) {
@@ -88,6 +86,7 @@ public class ItemManageActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
         recyclerView.addItemDecoration(new MyDivideItemDecoration());
+
     }
 
     private void generateData(){
@@ -120,7 +119,7 @@ public class ItemManageActivity extends AppCompatActivity {
                 Item item = new Item();
                 item.setName(s);
                 item.save();
-                itemList.add(position, item);
+                itemList.add(position, DbManager.findLast(Item.class));
 
                 dialog.dismiss();
                 adapter.notifyItemRangeChanged(position, 2);

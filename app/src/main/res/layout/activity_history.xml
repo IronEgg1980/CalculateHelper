@@ -22,4 +22,128 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+
+    <LinearLayout
+        android:id="@+id/slideMenu"
+        android:clickable="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:background="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/addButton"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="8dp"
+            android:text="新建"
+            android:textAppearance="?android:attr/textAppearanceButton"
+            android:textColor="@android:color/white"
+            app:backgroundTint="@color/colorPrimary"
+            app:cornerRadius="8dp"
+            app:icon="@drawable/ico_new1"
+            app:iconTint="@android:color/white"
+            app:rippleColor="@android:color/white" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/personManageButton"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="8dp"
+            android:text="人员管理"
+            android:textAppearance="?android:attr/textAppearanceButton"
+            android:textColor="@android:color/white"
+            app:backgroundTint="@android:color/holo_blue_dark"
+            app:cornerRadius="8dp"
+            app:icon="@drawable/person"
+            app:iconTint="@android:color/white"
+            app:rippleColor="@android:color/white" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/itemManageButton"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="8dp"
+            android:text="项目管理"
+            android:textAppearance="?android:attr/textAppearanceButton"
+            android:textColor="@android:color/white"
+            app:backgroundTint="@android:color/holo_green_light"
+            app:cornerRadius="8dp"
+            app:icon="@drawable/item"
+            app:iconTint="@android:color/white"
+            app:rippleColor="@android:color/white" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/infomationButton"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="8dp"
+            android:text="统计信息"
+            android:textAppearance="?android:attr/textAppearanceButton"
+            android:textColor="@android:color/white"
+            app:backgroundTint="@android:color/holo_orange_light"
+            app:cornerRadius="8dp"
+            app:icon="@drawable/ic_information"
+            app:iconTint="@android:color/white"
+            app:rippleColor="@android:color/white" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/backupButton"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="8dp"
+            android:text="备份"
+            android:textAppearance="?android:attr/textAppearanceButton"
+            android:textColor="@android:color/white"
+            app:backgroundTint="@android:color/holo_green_dark"
+            app:cornerRadius="8dp"
+            app:icon="@drawable/ic_backup"
+            app:iconTint="@android:color/white"
+            app:rippleColor="@android:color/white" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/menuToggle"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:paddingStart="-28dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/menu_toggle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/slideMenu"
+        app:layout_constraintTop_toTopOf="parent" />
+
+<!--    <com.google.android.material.button.MaterialButton-->
+<!--        android:id="@+id/addButton"-->
+<!--        android:textColor="@android:color/white"-->
+<!--        android:textStyle="bold"-->
+<!--        android:text="新建"-->
+<!--        android:gravity="center"-->
+<!--        android:layout_width="48dp"-->
+<!--        android:layout_height="48dp"-->
+<!--        android:layout_marginEnd="16dp"-->
+<!--        android:layout_marginBottom="16dp"-->
+<!--        android:textAppearance="?android:attr/textAppearanceButton"-->
+<!--        android:insetTop="0dp"-->
+<!--        android:insetBottom="0dp"-->
+<!--        android:insetLeft="0dp"-->
+<!--        android:insetRight="0dp"-->
+<!--        app:backgroundTint="@color/colorPrimary"-->
+<!--        app:rippleColor="@android:color/white"-->
+<!--        app:cornerRadius="24dp"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent" />-->
 </androidx.constraintlayout.widget.ConstraintLayout>

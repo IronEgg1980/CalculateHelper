@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.TextView;
 
 import com.mcxtzhang.swipemenulib.SwipeMenuLayout;
 
@@ -35,10 +36,9 @@ public class PersonManageActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.toolbar_recyclerview_layout);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle("成员管理");
-        setSupportActionBar(toolbar);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+        TextView titleTextView = findViewById(R.id.titleTextView);
+        titleTextView.setText("人员管理");
+        findViewById(R.id.navagationIco).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onBackPressed();

@@ -183,6 +183,14 @@ public class InputActivity extends AppCompatActivity {
     }
 
     private void initialView() {
+        TextView titleTextView = findViewById(R.id.titleTextView);
+        titleTextView.setText("工作区 - 输入数据");
+        findViewById(R.id.navagationIco).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
         adpter = new Adapter();
         itemNameTextView = findViewById(R.id.item_name_textview);
         itemNameTextView.setText("");
@@ -515,15 +523,6 @@ public class InputActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_input);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle("数据输入");
-        setSupportActionBar(toolbar);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
         createMonthList();
         initial();
         initialView();

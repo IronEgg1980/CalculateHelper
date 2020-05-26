@@ -5,8 +5,31 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/root"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/amount_textview"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:padding="8dp"
+            android:text="总金额："
+            app:layout_constraintEnd_toStartOf="@id/person_count_textview"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/person_count_textview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:padding="8dp"
+            android:text="分配人数："
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/recordtime_textview"
@@ -18,33 +41,18 @@
             android:text="记录日期："
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/amount_textview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:padding="8dp"
-            android:text="总金额："
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/recordtime_textview" />
-
-        <TextView
-            android:id="@+id/person_count_textview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:padding="8dp"
-            android:text="分配人数："
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/amount_textview" />
+            app:layout_constraintTop_toBottomOf="@id/amount_textview" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+    <TextView
+        android:background="@android:color/holo_blue_dark"
+        android:layout_width="80dp"
+        android:layout_height="match_parent"
+        android:id="@+id/swipe_menu_edit"
+        android:text="编辑"
+        android:textColor="@android:color/white"
+        android:textSize="@dimen/TextSize_M"
+        android:gravity="center"/>
     <TextView
         android:background="@android:color/holo_red_light"
         android:layout_width="80dp"

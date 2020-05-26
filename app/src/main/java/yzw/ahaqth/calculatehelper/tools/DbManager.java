@@ -549,6 +549,29 @@ public abstract class DbManager {
         return getRecordGroupByItem(list);
     }
 
+    public static List<RecordDetailsGroupByItem> getInfomationList(){
+        List<RecordDetails> list = find(RecordDetails.class,
+                false,
+                null,
+                null,
+                null,
+                null,
+                "itemname,month"
+                );
+        return getRecordGroupByItem(list);
+    }
+
+    public static List<AssignGroupByPerson> getAssignInformationList(){
+        List<AssignDetails> list = find(AssignDetails.class,
+                false,
+                null,
+                null,
+                null,
+                null,
+                "personname,month");
+        return getAssignGroupByPerson(list);
+    }
+
     public static List<RecordDetailsGroupByItem> getRecordGroupByItem(List<RecordDetails> list) {
         List<RecordDetailsGroupByItem> result = new ArrayList<>();
         if (!list.isEmpty()) {

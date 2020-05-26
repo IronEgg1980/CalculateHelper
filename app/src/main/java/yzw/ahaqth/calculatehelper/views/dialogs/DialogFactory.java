@@ -31,8 +31,9 @@ public class DialogFactory extends DialogFragment {
     private int icoId = R.drawable.info;
     private TextView messageTextView;
 
-    public void setDialogCallback(DialogCallback dialogCallback) {
+    public DialogFactory setDialogCallback(DialogCallback dialogCallback) {
         this.dialogCallback = dialogCallback;
+        return this;
     }
 
     public static DialogFactory getConfirmDialog(String title, String message, int icoId) {
