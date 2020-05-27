@@ -3,6 +3,7 @@ package yzw.ahaqth.calculatehelper.views;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.widget.TextView;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -20,12 +21,14 @@ public class TestBrokenLineGraph extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test_broken_line_graph);
+        TextView textView = findViewById(R.id.titleView);
         Bundle bundle = getIntent().getExtras();
         BrokenLineGraph.BrokenLineGraphEntity[] datas = new BrokenLineGraph.BrokenLineGraphEntity[0];
         if(bundle != null){
             int mode = bundle.getInt("mode");
             if(mode == 1) {
                String personname = bundle.getString("personname");
+               textView.setText(personname);
                 List<AssignDetails> list =DbManager.find(AssignDetails.class,
                         false,
                         "personname = ?",
@@ -36,6 +39,7 @@ public class TestBrokenLineGraph extends AppCompatActivity {
                 datas = list.toArray(new AssignDetails[0]);
             }else{
                 String itemname = bundle.getString("itemname");
+                textView.setText(itemname);
                 List<RecordDetails> list = DbManager.find(RecordDetails.class,
                         false,
                         "itemname = ?",

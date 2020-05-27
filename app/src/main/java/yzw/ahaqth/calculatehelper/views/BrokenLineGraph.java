@@ -9,10 +9,14 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +31,7 @@ public class BrokenLineGraph extends View {
         double getValue();
     }
 
+    private final String TAG = "殷宗旺";
     private BrokenLineGraphEntity[] dataList;
     private double maxValue = 0, perValue;
     private int itemWidth, itemHeight;
@@ -35,27 +40,32 @@ public class BrokenLineGraph extends View {
     private int xlineCount;
 
     private List<Point> points;
-    private List<Rect> valuesBgs;
+    private List<RectF> valuesBgs;
+    private List<Integer> valuesBaseLines;
     private Path linePath;
     private List<String> labels;
     private Paint pointPaint, linePaint, textPaint;
     private float textBaseLine, textHeight;
-
+    private boolean unCaculated = true;
 
     public void setData(@NonNull BrokenLineGraphEntity[] list) {
+        this.unCaculated = true;
         this.dataList = list;
         for (BrokenLineGraphEntity entity : list) {
             maxValue = Math.max(entity.getValue(), maxValue);
         }
         generateLabel();
-        invalidate();
+        requestLayout();
     }
 
     private void generatePoint() {
         linePath = new Path();
         if (valuesBgs == null)
             valuesBgs = new ArrayList<>();
+        if (valuesBaseLines == null)
+            valuesBaseLines = new ArrayList<>();
         valuesBgs.clear();
+        valuesBaseLines.clear();
         if (points == null)
             points = new ArrayList<>();
         points.clear();
@@ -66,7 +76,7 @@ public class BrokenLineGraph extends View {
             BrokenLineGraphEntity entity = dataList[i];
             double ratio = BigDecimalHelper.divide(maxValue - entity.getValue(), maxValue, 2);
             Point point = new Point();
-            point.x = itemWidth / 2 + padding + itemWidth * i;
+            point.x = padding + itemWidth * (i + 1);
             point.y = (int) (itemHeight * ratio) + padding;
             points.add(point);
 
@@ -78,11 +88,18 @@ public class BrokenLineGraph extends View {
             Rect rect = new Rect();
             String text = String.valueOf(dataList[i].getValue());
             textPaint.getTextBounds(text, 0, text.length(), rect);
-            rect.left = point.x - rect.width() / 2 - valueBgPadding;
-            rect.right = point.x + rect.width() / 2 + valueBgPadding;
-            rect.top = point.y - rect.height() - valueBgPadding * 2 - 50;
-            rect.bottom = point.y - 50;
-            valuesBgs.add(rect);
+
+            float bottom = point.y - 25;
+            float left = point.x - rect.width() / 2 - valueBgPadding;
+            float top = bottom - valueBgPadding * 2 - rect.height();
+            float right = point.x + rect.width() / 2 + valueBgPadding;
+
+            RectF rectF = new RectF(left, top, right, bottom);
+            valuesBgs.add(rectF);
+
+            Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
+            int baseLine = (int) ((fontMetrics.descent - fontMetrics.ascent) / 2 - fontMetrics.descent + (bottom - rect.height() / 2 - valueBgPadding));
+            valuesBaseLines.add(baseLine);
         }
     }
 
@@ -174,9 +191,12 @@ public class BrokenLineGraph extends View {
         int firstInt = Integer.parseInt(perValueString.substring(0, 1));
         perValue = (firstInt + 1) * Math.pow(10, (index - 1));
         maxValue = BigDecimalHelper.multiply(perValue, xlineCount);
+        unCaculated = false;
     }
 
     private void drawXY(Canvas canvas) {
+        textPaint.setTextAlign(Paint.Align.RIGHT);
+        Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
         linePaint.setColor(Color.WHITE);
         linePaint.setStrokeWidth(0.75f);
         int perHeight = itemHeight / xlineCount;
@@ -184,24 +204,28 @@ public class BrokenLineGraph extends View {
             int y = padding + perHeight * i;
             int value = (int) (maxValue - i * perValue);
             int right = padding + itemWidth * dataList.length;
+            int baseLine = (int) (y + (fontMetrics.descent - fontMetrics.ascent) / 2 - fontMetrics.descent);
+
             canvas.drawLine(padding, y, right, y, linePaint);
-            canvas.drawText(String.valueOf(value), padding, y, textPaint);
+            canvas.drawText(String.valueOf(value),  padding - 10, baseLine, textPaint);
         }
         for (int i = 0; i <= dataList.length; i++) {
             int x = itemWidth * i + padding;
             canvas.drawLine(x, padding, x, itemHeight + padding, linePaint);
         }
+        textPaint.setTextAlign(Paint.Align.CENTER);
     }
 
-    private void drawValue(Canvas canvas, int index) {
-        Point point = points.get(index);
-        canvas.drawCircle(point.x, point.y, 10, pointPaint);
-        String text = String.valueOf(dataList[index]);
-        Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
-        Rect rect = valuesBgs.get(index);
-        int baseLine = (int) (((fontMetrics.descent - fontMetrics.ascent) / 2 - fontMetrics.descent)+(rect.height() / 2));
-        canvas.drawRoundRect(rect.left, rect.top, rect.right, rect.bottom, 20, 20, pointPaint);
-        canvas.drawText(text,point.x,baseLine,textPaint);
+    private void drawValue(Canvas canvas) {
+        for (int index = 0; index < dataList.length; index++) {
+            Point point = points.get(index);
+            pointPaint.setColor(Color.GREEN);
+            canvas.drawCircle(point.x, point.y, 10, pointPaint);
+            pointPaint.setColor(Color.parseColor("#008577"));
+            canvas.drawRoundRect(valuesBgs.get(index), 20, 20, pointPaint);
+            canvas.drawText(String.valueOf(dataList[index].getValue()), point.x, valuesBaseLines.get(index), textPaint);
+            canvas.drawText(labels.get(index), point.x, textBaseLine, textPaint);//底部label
+        }
     }
 
     private void drawBg(Canvas canvas) {
@@ -222,41 +246,45 @@ public class BrokenLineGraph extends View {
         totalHeight = Math.max(height, itemHeight + padding * 2);
         itemHeight = (int) (totalHeight - padding * 2 - textHeight);
         xlineCount = itemHeight / itemWidth;
-        setTextBaseLine();
         setMeasuredDimension(totalWidth, totalHeight);
+        if (unCaculated) {
+            setTextBaseLine();
+            calculateValues();
+            generatePoint();
+        }
     }
 
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
-        calculateValues();
-        generatePoint();
-
+//        calculateValues();
+//        generatePoint();
         drawBg(canvas);
         drawXY(canvas);
+
         linePaint.setColor(Color.YELLOW);
         linePaint.setStrokeWidth(2f);
-
         canvas.drawPath(linePath, linePaint);
+        drawValue(canvas);
+    }
 
-        for (int i = 0; i < dataList.length; i++) {
-            drawValue(canvas, i);
-//            canvas.drawText(labels.get(i), point.x, textBaseLine, textPaint);
-//            if (i > 0) {
-//                Point prePoint = points.get(i - 1);
-//                canvas.drawLine(prePoint.x, prePoint.y, point.x, point.y, linePaint);
-//                canvas.drawCircle(prePoint.x, prePoint.y, 10, pointPaint);
-//                canvas.drawText(String.valueOf(dataList[i - 1].getValue()), prePoint.x, prePoint.y - 25, textPaint);
-//            }
-////            else {
-////                canvas.drawCircle(point.x, point.y, 20, pointPaint);
-////            }
-//            if (i == dataList.length - 1) {
-//                canvas.drawCircle(point.x, point.y, 10, pointPaint);
-//                canvas.drawText(String.valueOf(dataList[i].getValue()), point.x, point.y - 25, textPaint);
-//            }
+    private int lastX;
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int x = (int) event.getRawX();
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                lastX = x;
+                break;
+            case MotionEvent.ACTION_MOVE:
+                int offset = lastX - x;
+                totalOffset += offset;
+                scrollBy(offset, 0);
+                lastX = x;
+//                invalidate();
+                break;
         }
+        return true;
     }
 }

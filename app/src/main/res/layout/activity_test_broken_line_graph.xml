@@ -7,17 +7,36 @@
     android:background="@android:color/black"
     tools:context=".views.TestBrokenLineGraph">
 
-    <HorizontalScrollView
+    <TextView
+        android:id="@+id/titleView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="测试文字"
+        android:textColor="@android:color/white"
+        android:textSize="@dimen/TextSize_L"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/brokenLineGraph"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintStart_toStartOf="parent" />
+
+<!--    <HorizontalScrollView-->
+<!--        android:id="@+id/horizontalScrollView"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent">-->
 
         <yzw.ahaqth.calculatehelper.views.BrokenLineGraph
             android:id="@+id/brokenLineGraph"
-            android:layout_width="wrap_content"
-            android:layout_height="400dp" />
-    </HorizontalScrollView>
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+<!--    </HorizontalScrollView>-->
 </androidx.constraintlayout.widget.ConstraintLayout>
