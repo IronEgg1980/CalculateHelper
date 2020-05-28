@@ -9,14 +9,11 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -207,7 +204,7 @@ public class BrokenLineGraph extends View {
             int baseLine = (int) (y + (fontMetrics.descent - fontMetrics.ascent) / 2 - fontMetrics.descent);
 
             canvas.drawLine(padding, y, right, y, linePaint);
-            canvas.drawText(String.valueOf(value),  padding - 10, baseLine, textPaint);
+            canvas.drawText(String.valueOf(value), padding - 10, baseLine, textPaint);
         }
         for (int i = 0; i <= dataList.length; i++) {
             int x = itemWidth * i + padding;
@@ -258,8 +255,6 @@ public class BrokenLineGraph extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-//        calculateValues();
-//        generatePoint();
         drawBg(canvas);
         drawXY(canvas);
 
@@ -270,6 +265,7 @@ public class BrokenLineGraph extends View {
     }
 
     private int lastX;
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int x = (int) event.getRawX();
@@ -279,8 +275,8 @@ public class BrokenLineGraph extends View {
                 break;
             case MotionEvent.ACTION_MOVE:
                 int offset = lastX - x;
-                totalOffset += offset;
-                scrollBy(offset, 0);
+                if ((offset > 0 && canScrollHorizontally(1)) || (offset < 0 && canScrollHorizontally(-1)))
+                    scrollBy(offset, 0);
                 lastX = x;
 //                invalidate();
                 break;
