@@ -9,8 +9,15 @@ public class DateUtils {
     private static DateTimeFormatter yyyyM_Formatter;
     private static DateTimeFormatter yyyyMdHHmmss_Formatter;
     private static DateTimeFormatter HHmmss_Formatter;
+    private static DateTimeFormatter yyM_Formatter;
 
     private final static Locale locale = Locale.CHINA;
+
+    public static DateTimeFormatter getYyM_Formatter(){
+        if(yyM_Formatter == null)
+            yyM_Formatter = DateTimeFormatter.ofPattern("yy年M月",locale);
+        return yyM_Formatter;
+    }
 
     public static DateTimeFormatter getYyyyMd_EEEE_Formatter(){
         if(yyyyMd_EEEE_Formatter == null)

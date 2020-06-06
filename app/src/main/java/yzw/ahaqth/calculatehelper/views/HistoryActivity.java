@@ -33,6 +33,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -52,6 +53,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HistoryActivity extends AppCompatActivity {
+    public static int SCREEN_WIDTH,SCREEN_HEIGHT;
     private RecyclerView recyclerView;
     private BaseAdapter<Record> recordAdapter;
     private List<Record> list;
@@ -62,6 +64,11 @@ public class HistoryActivity extends AppCompatActivity {
     private String TAG = "殷宗旺";
 
     private void initial(){
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        SCREEN_WIDTH = dm.widthPixels;
+        SCREEN_HEIGHT = dm.heightPixels;
+
         list = new ArrayList<>();
         recordAdapter = new BaseAdapter<Record>(R.layout.record_item_layout,list) {
             @Override

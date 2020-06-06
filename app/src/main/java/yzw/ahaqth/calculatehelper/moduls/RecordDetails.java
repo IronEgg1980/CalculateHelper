@@ -57,7 +57,7 @@ public class RecordDetails extends BaseModul implements BrokenLineGraph.BrokenLi
 
     @Override
     public String getLabel() {
-        return month.format(DateUtils.getYyyyM_Formatter());
+        return month.format(DateUtils.getYyM_Formatter());
     }
 
     @Override

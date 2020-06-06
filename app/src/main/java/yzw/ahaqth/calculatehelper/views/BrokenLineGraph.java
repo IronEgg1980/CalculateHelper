@@ -9,8 +9,12 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
+import android.view.VelocityTracker;
 import android.view.View;
+import android.view.ViewConfiguration;
+import android.widget.Scroller;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,13 +32,82 @@ public class BrokenLineGraph extends View {
         double getValue();
     }
 
+    private class FlingRunnable implements Runnable {
+        int mInitX, mVelocityX, mMinX, mMaxX;
+
+        void start(int initX,
+                   int velocityX,
+                   int minX,
+                   int maxX) {
+            this.mInitX = initX;
+            this.mVelocityX = velocityX;
+            this.mMinX = minX;
+            this.mMaxX = maxX;
+
+            // 先停止上一次的滚动
+            if (!mScroller.isFinished()) {
+                mScroller.abortAnimation();
+            }
+
+            // 开始 fling
+            mScroller.fling(initX, 0, velocityX,
+                    0, 0, maxX, 0, 0);
+            post(this);
+        }
+
+        void stop() {
+            if (!mScroller.isFinished())
+                mScroller.abortAnimation();
+        }
+
+        @Override
+        public void run() {
+            // 如果已经结束，就不再进行
+            if (!mScroller.computeScrollOffset()) {
+                return;
+            }
+
+            // 计算偏移量
+            int currX = mScroller.getCurrX();
+            int diffX = mInitX - currX;
+
+            // 用于记录是否超出边界，如果已经超出边界，则不再进行回调，即使滚动还没有完成
+            boolean isEnd = false;
+
+            if (diffX != 0) {
+                // 超出右边界，进行修正
+                if (getScrollX() >= totalWidth - screenWidth) {
+                    diffX = totalWidth - screenWidth - getScrollX();
+                    isEnd = true;
+                }
+
+                // 超出左边界，进行修正
+                if (getScrollX() <= 0) {
+                    diffX = -getScrollX();
+                    isEnd = true;
+                }
+
+                if (!mScroller.isFinished()) {
+                    scrollBy(diffX, 0);
+                }
+                mInitX = currX;
+            }
+
+            if (!isEnd) {
+                post(this);
+            }
+
+        }
+    }
+
     private final String TAG = "殷宗旺";
     private BrokenLineGraphEntity[] dataList;
     private double maxValue = 0, perValue;
     private int itemWidth, itemHeight;
-    private int totalWidth, totalHeight, padding;
+    private int screenWidth, totalWidth, totalHeight, padding;
     private float ellipsWidth = 0;
     private int xlineCount;
+//    private int maxRight;
 
     private List<Point> points;
     private List<RectF> valuesBgs;
@@ -44,6 +117,10 @@ public class BrokenLineGraph extends View {
     private Paint pointPaint, linePaint, textPaint;
     private float textBaseLine, textHeight;
     private boolean unCaculated = true;
+    private Scroller mScroller;
+    private FlingRunnable flingRunnable;
+    private VelocityTracker velocityTracker;
+    private int mMaximumVelocity, mMinimumVelocity;
 
     public void setData(@NonNull BrokenLineGraphEntity[] list) {
         this.unCaculated = true;
@@ -137,8 +214,10 @@ public class BrokenLineGraph extends View {
     }
 
     private void initial(Context context) {
-        this.padding = Tools.dip2px(context, 40);
-        this.itemWidth = Tools.dip2px(context, 80);
+        this.screenWidth = HistoryActivity.SCREEN_WIDTH;
+
+        this.padding = Tools.dip2px(context, 48);
+        this.itemWidth = Tools.dip2px(context, 64);
         this.itemHeight = Tools.dip2px(context, 120);
         this.totalHeight = itemHeight + padding * 2;
         this.totalWidth = dataList == null || dataList.length == 0 ? itemWidth : itemWidth * dataList.length;
@@ -165,6 +244,10 @@ public class BrokenLineGraph extends View {
         this.linePaint.setColor(Color.GREEN);
         this.linePaint.setStyle(Paint.Style.STROKE);
 
+        this.mScroller = new Scroller(context);
+        this.flingRunnable = new FlingRunnable();
+        this.mMaximumVelocity = ViewConfiguration.get(context).getScaledMaximumFlingVelocity();
+        this.mMinimumVelocity = ViewConfiguration.get(context).getScaledMinimumFlingVelocity();
     }
 
     public BrokenLineGraph(Context context) {
@@ -192,28 +275,38 @@ public class BrokenLineGraph extends View {
     }
 
     private void drawXY(Canvas canvas) {
-        textPaint.setTextAlign(Paint.Align.RIGHT);
-        Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
         linePaint.setColor(Color.WHITE);
         linePaint.setStrokeWidth(0.75f);
         int perHeight = itemHeight / xlineCount;
         for (int i = 0; i <= xlineCount; i++) {
             int y = padding + perHeight * i;
-            int value = (int) (maxValue - i * perValue);
             int right = padding + itemWidth * dataList.length;
-            int baseLine = (int) (y + (fontMetrics.descent - fontMetrics.ascent) / 2 - fontMetrics.descent);
-
             canvas.drawLine(padding, y, right, y, linePaint);
-            canvas.drawText(String.valueOf(value), padding - 10, baseLine, textPaint);
         }
         for (int i = 0; i <= dataList.length; i++) {
             int x = itemWidth * i + padding;
             canvas.drawLine(x, padding, x, itemHeight + padding, linePaint);
         }
-        textPaint.setTextAlign(Paint.Align.CENTER);
+    }
+
+    private void drawSideBar(Canvas canvas) {
+        int perHeight = itemHeight / xlineCount;
+        Paint paint = new Paint();
+        paint.setColor(Color.BLACK);
+        paint.setStyle(Paint.Style.FILL);
+        canvas.drawRect(getScrollX(), 0, getScrollX() + padding, getBottom(), paint);
+        textPaint.setTextAlign(Paint.Align.RIGHT);
+        Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
+        for (int i = 0; i <= xlineCount; i++) {
+            int y = padding + perHeight * i;
+            int value = (int) (maxValue - i * perValue);
+            int baseLine = (int) (y + (fontMetrics.descent - fontMetrics.ascent) / 2 - fontMetrics.descent);
+            canvas.drawText(String.valueOf(value), getScrollX() + padding - 10, baseLine, textPaint);
+        }
     }
 
     private void drawValue(Canvas canvas) {
+        textPaint.setTextAlign(Paint.Align.CENTER);
         for (int index = 0; index < dataList.length; index++) {
             Point point = points.get(index);
             pointPaint.setColor(Color.GREEN);
@@ -231,6 +324,26 @@ public class BrokenLineGraph extends View {
         paint.setColor(Color.BLACK);
         canvas.drawRect(rectF, paint);
     }
+
+    private void constrainScroll(int dx) {
+        Rect rect = new Rect();
+        getLocalVisibleRect(rect);
+        if (dx > 0) {
+            dx = Math.min(dx, totalWidth - rect.right);
+        } else if (dx < 0) {
+            dx = Math.max(dx, 0 - rect.left);
+        }
+        scrollBy(dx, 0);
+    }
+
+//    @Override
+//    public void computeScroll() {
+//        if (mScroller.computeScrollOffset()) {
+//            scrollTo(mScroller.getCurrX(), mScroller.getCurrY());
+//            // 通过重绘让系统调用onDraw，onDraw中又会调用computeScroll，如此不断循环，直到Scroller执行完毕
+//            postInvalidate();
+//        }
+//    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -262,6 +375,8 @@ public class BrokenLineGraph extends View {
         linePaint.setStrokeWidth(2f);
         canvas.drawPath(linePath, linePaint);
         drawValue(canvas);
+
+        drawSideBar(canvas);
     }
 
     private int lastX;
@@ -269,16 +384,39 @@ public class BrokenLineGraph extends View {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int x = (int) event.getRawX();
+        if (velocityTracker == null) {
+            velocityTracker = VelocityTracker.obtain();
+        }
+        velocityTracker.addMovement(event);
+
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                flingRunnable.stop();
                 lastX = x;
                 break;
             case MotionEvent.ACTION_MOVE:
                 int offset = lastX - x;
-                if ((offset > 0 && canScrollHorizontally(1)) || (offset < 0 && canScrollHorizontally(-1)))
-                    scrollBy(offset, 0);
+                constrainScroll(offset);
                 lastX = x;
-//                invalidate();
+                break;
+            case MotionEvent.ACTION_UP:
+                velocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
+                // 获取横向速度
+                int velocityX = (int) velocityTracker.getXVelocity();
+                // 速度要大于最小的速度值，才开始滑动
+                if (Math.abs(velocityX) > mMinimumVelocity) {
+                    int initX = getScrollX();
+                    int maxX = totalWidth - screenWidth;
+                    if (maxX > 0) {
+                        flingRunnable.start(initX, velocityX, 0, maxX);
+                    }
+                }
+
+                if (velocityTracker != null) {
+                    velocityTracker.recycle();
+                    velocityTracker = null;
+                }
+
                 break;
         }
         return true;
