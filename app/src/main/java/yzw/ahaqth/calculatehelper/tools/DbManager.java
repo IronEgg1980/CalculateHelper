@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.strictmode.SqliteObjectLeakedViolation;
 import android.util.Log;
 
 import java.lang.reflect.Field;
@@ -18,7 +19,10 @@ import java.util.List;
 
 import yzw.ahaqth.calculatehelper.moduls.AssignDetails;
 import yzw.ahaqth.calculatehelper.moduls.AssignGroupByPerson;
+import yzw.ahaqth.calculatehelper.moduls.BackupEntity;
 import yzw.ahaqth.calculatehelper.moduls.BaseModul;
+import yzw.ahaqth.calculatehelper.moduls.Item;
+import yzw.ahaqth.calculatehelper.moduls.Person;
 import yzw.ahaqth.calculatehelper.moduls.Record;
 import yzw.ahaqth.calculatehelper.moduls.RecordDetails;
 import yzw.ahaqth.calculatehelper.moduls.RecordDetailsGroupByItem;
@@ -768,5 +772,43 @@ public abstract class DbManager {
             result.add(lastOne);
         }
         return result;
+    }
+
+    public static void saveRestoreData(BackupEntity backupEntity){
+        SQLiteDatabase sqLiteDatabase = DbHelper.getWriteDB();
+        sqLiteDatabase.beginTransaction();
+        try {
+            sqLiteDatabase.delete(AssignDetails.class.getSimpleName(),null,null);
+            sqLiteDatabase.delete(Item.class.getSimpleName(),null,null);
+            sqLiteDatabase.delete(Person.class.getSimpleName(),null,null);
+            sqLiteDatabase.delete(RecordDetails.class.getSimpleName(),null,null);
+            sqLiteDatabase.delete(Remain.class.getSimpleName(),null,null);
+            sqLiteDatabase.delete(RemainDetails.class.getSimpleName(),null,null);
+
+            saveList(backupEntity.getAssignDetails(),sqLiteDatabase);
+            saveList(backupEntity.getItems(),sqLiteDatabase);
+            saveList(backupEntity.getPeople(),sqLiteDatabase);
+            saveList(backupEntity.getRecordDetails(),sqLiteDatabase);
+            saveList(backupEntity.getRemainDetails(),sqLiteDatabase);
+            saveList(backupEntity.getRemains(),sqLiteDatabase);
+
+            sqLiteDatabase.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "error : " + e.getLocalizedMessage());
+        } finally {
+            sqLiteDatabase.endTransaction();
+        }
+    }
+
+    private static <T> void saveOne(T t,SQLiteDatabase sqLiteDatabase){
+        ContentValues contentValues = modul2ContentValues(t);
+        sqLiteDatabase.insert(t.getClass().getSimpleName(),null,contentValues);
+    }
+
+    private static <T> void saveList(List<T> list,SQLiteDatabase sqLiteDatabase){
+        for(T t : list){
+            saveOne(t,sqLiteDatabase);
+        }
     }
 }

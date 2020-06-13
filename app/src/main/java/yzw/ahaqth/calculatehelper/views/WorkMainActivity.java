@@ -94,7 +94,8 @@ public class WorkMainActivity extends AppCompatActivity {
             showAnimatorSet.playTogether(showAnimator,toggle2Right);
             showAnimatorSet.setDuration(200);
         }
-        showAnimatorSet.start();
+        if(slideMenu.getVisibility() != View.VISIBLE)
+            showAnimatorSet.start();
     }
 
     private void hideMenu(){
@@ -114,8 +115,8 @@ public class WorkMainActivity extends AppCompatActivity {
             hideAnimatorSet.setDuration(200);
             hideAnimatorSet.playTogether(hideAnimator,toggle2Left);
         }
-
-        hideAnimatorSet.start();
+        if(slideMenu.getVisibility()==View.VISIBLE)
+            hideAnimatorSet.start();
     }
 
     private void initialView() {
@@ -220,6 +221,12 @@ public class WorkMainActivity extends AppCompatActivity {
         super.onStart();
         if(hasData) {
             readData();
+            slideMenu.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    hideMenu();
+                }
+            },500);
         }else{
             hasData = true;
             jumpToInput();

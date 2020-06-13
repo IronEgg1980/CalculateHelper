@@ -113,6 +113,22 @@
             app:icon="@drawable/ic_backup"
             app:iconTint="@android:color/white"
             app:rippleColor="@android:color/white" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/restoreButton"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="8dp"
+            android:text="恢复"
+            android:textAppearance="?android:attr/textAppearanceButton"
+            android:textColor="@android:color/white"
+            app:backgroundTint="@android:color/holo_red_light"
+            app:cornerRadius="8dp"
+            app:icon="@drawable/ic_backup"
+            app:iconTint="@android:color/white"
+            app:rippleColor="@android:color/white" />
     </LinearLayout>
 
     <ImageView
