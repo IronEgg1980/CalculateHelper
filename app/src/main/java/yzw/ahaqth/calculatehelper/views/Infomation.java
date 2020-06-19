@@ -5,34 +5,24 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
-import android.content.res.ColorStateList;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.google.android.material.tabs.TabLayout;
-import com.mcxtzhang.swipemenulib.SwipeMenuLayout;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 import yzw.ahaqth.calculatehelper.R;
-import yzw.ahaqth.calculatehelper.moduls.AssignDetails;
 import yzw.ahaqth.calculatehelper.moduls.AssignGroupByPerson;
-import yzw.ahaqth.calculatehelper.moduls.RecordDetails;
 import yzw.ahaqth.calculatehelper.moduls.RecordDetailsGroupByItem;
 import yzw.ahaqth.calculatehelper.tools.BigDecimalHelper;
-import yzw.ahaqth.calculatehelper.tools.DateUtils;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
 import yzw.ahaqth.calculatehelper.tools.Tools;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseAdapter;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
-import yzw.ahaqth.calculatehelper.views.dialogs.ToastFactory;
+import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
 
 public class Infomation extends AppCompatActivity {
     private RecyclerView recyclerView;
@@ -40,8 +30,8 @@ public class Infomation extends AppCompatActivity {
     private List<RecordDetailsGroupByItem> recordDetailsList;
     private List<AssignGroupByPerson> assignList;
     private double maxAmount = 0, maxAssignAmount = 0;
-    private BaseAdapter<RecordDetailsGroupByItem> recordAdapter;
-    private BaseAdapter<AssignGroupByPerson> assignAdapter;
+    private MyAdapter<RecordDetailsGroupByItem> recordAdapter;
+    private MyAdapter<AssignGroupByPerson> assignAdapter;
     private int step = 1,currentTabPosition = 0;
 
     @Override
@@ -79,39 +69,49 @@ public class Infomation extends AppCompatActivity {
         });
         maxAmount = recordDetailsList.isEmpty() ? 1 : recordDetailsList.get(0).getTotalAmount();
         maxAssignAmount = assignList.isEmpty() ? 1 : assignList.get(0).getAssignAmount();
-        recordAdapter = new BaseAdapter<RecordDetailsGroupByItem>(R.layout.infomation_record_item, recordDetailsList) {
+        recordAdapter = new MyAdapter<RecordDetailsGroupByItem>(recordDetailsList) {
             @Override
-            public void bindData(final BaseViewHolder baseViewHolder, RecordDetailsGroupByItem data) {
-                baseViewHolder.setText(R.id.amountTV, String.valueOf(data.getTotalAmount()));
-                baseViewHolder.setText(R.id.itemnameTV, data.getItemName());
+            public int getLayoutId(int position) {
+                return R.layout.infomation_record_item;
+            }
+
+            @Override
+            public void bindData(final MyViewHolder myViewHolder, RecordDetailsGroupByItem data) {
+                myViewHolder.setText(R.id.amountTV, String.valueOf(data.getTotalAmount()));
+                myViewHolder.setText(R.id.itemnameTV, data.getItemName());
                 double ratio = BigDecimalHelper.divide(data.getTotalAmount(), maxAmount);
-                View view = baseViewHolder.getView(R.id.progressTV);
+                View view = myViewHolder.getView(R.id.progressTV);
                 ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
                 layoutParams.width = (int) ((parentWidth - Tools.dip2px(Infomation.this, 100)) * ratio);
                 view.setLayoutParams(layoutParams);
 
-                baseViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+                myViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        onRecordItemClick(baseViewHolder.getAdapterPosition());
+                        onRecordItemClick(myViewHolder.getAdapterPosition());
                     }
                 });
             }
         };
-        assignAdapter = new BaseAdapter<AssignGroupByPerson>(R.layout.info_details_item, assignList) {
+        assignAdapter = new MyAdapter<AssignGroupByPerson>(assignList) {
             @Override
-            public void bindData(final BaseViewHolder baseViewHolder, AssignGroupByPerson data) {
-                baseViewHolder.setText(R.id.amountTextView, String.valueOf(data.getAssignAmount()));
-                baseViewHolder.setText(R.id.monthTextView, data.getPersonName());
+            public int getLayoutId(int position) {
+                return R.layout.info_details_item;
+            }
+
+            @Override
+            public void bindData(final MyViewHolder myViewHolder, AssignGroupByPerson data) {
+                myViewHolder.setText(R.id.amountTextView, String.valueOf(data.getAssignAmount()));
+                myViewHolder.setText(R.id.monthTextView, data.getPersonName());
                 double ratio = BigDecimalHelper.divide(data.getAssignAmount(), maxAssignAmount);
-                View view = baseViewHolder.getView(R.id.progressView);
+                View view = myViewHolder.getView(R.id.progressView);
                 ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
                 layoutParams.width = (int) ((parentWidth - Tools.dip2px(Infomation.this, 160)) * ratio);
                 view.setLayoutParams(layoutParams);
-                baseViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+                myViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        onAssignItemClick(baseViewHolder.getAdapterPosition());
+                        onAssignItemClick(myViewHolder.getAdapterPosition());
                     }
                 });
             }

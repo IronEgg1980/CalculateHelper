@@ -1,7 +1,6 @@
 package yzw.ahaqth.calculatehelper.views;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -10,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.tabs.TabLayout;
+import com.mcxtzhang.swipemenulib.SwipeMenuLayout;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -19,15 +19,14 @@ import yzw.ahaqth.calculatehelper.R;
 import yzw.ahaqth.calculatehelper.moduls.AssignGroupByPerson;
 import yzw.ahaqth.calculatehelper.moduls.RecordDetailsGroupByItem;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseAdapter;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
+import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
 
 public class ShowRecordDetailsActivity extends AppCompatActivity {
     private LocalDateTime recordTime;
     private RecyclerView recyclerView;
     private TabLayout tabLayout;
-    private BaseAdapter<RecordDetailsGroupByItem> recordGroupByItemAdapter;
-    private BaseAdapter<AssignGroupByPerson> assignAdapter;
+    private MyAdapter<RecordDetailsGroupByItem> recordGroupByItemAdapter;
+    private MyAdapter<AssignGroupByPerson> assignAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,23 +43,35 @@ public class ShowRecordDetailsActivity extends AppCompatActivity {
 
     private void initial(){
         List<RecordDetailsGroupByItem> list = DbManager.getRecordGroupByItem(recordTime);
-        recordGroupByItemAdapter = new BaseAdapter<RecordDetailsGroupByItem>(R.layout.recordgroupbyitem_item_layout, list) {
+        recordGroupByItemAdapter = new MyAdapter<RecordDetailsGroupByItem>(list) {
             @Override
-            public void bindData(final BaseViewHolder baseViewHolder, final RecordDetailsGroupByItem data) {
-                baseViewHolder.setText(R.id.itemname_textview, data.getItemName());
-                baseViewHolder.setText(R.id.amount_textview, "总金额：" + data.getTotalAmount());
-                baseViewHolder.setText(R.id.note_textview, data.getMonthNote());
+            public int getLayoutId(int position) {
+                return R.layout.recordgroupbyitem_item_layout;
+            }
+
+            @Override
+            public void bindData(final MyViewHolder myViewHolder, final RecordDetailsGroupByItem data) {
+                myViewHolder.setText(R.id.itemname_textview, data.getItemName());
+                myViewHolder.setText(R.id.amount_textview, "总金额：" + data.getTotalAmount());
+                myViewHolder.setText(R.id.note_textview, data.getMonthNote());
+                SwipeMenuLayout swipeMenuLayout = myViewHolder.getView(R.id.swipeMenuLayout);
+                swipeMenuLayout.setSwipeEnable(false);
             }
         };
 
         List<AssignGroupByPerson> list2 = DbManager.getAssignGroupByPersonList(recordTime);
-        assignAdapter = new BaseAdapter<AssignGroupByPerson>(R.layout.assign_recorddetailslist_item, list2) {
+        assignAdapter = new MyAdapter<AssignGroupByPerson>(list2) {
             @Override
-            public void bindData(BaseViewHolder baseViewHolder, AssignGroupByPerson data) {
-                baseViewHolder.setText(R.id.monthTextView, data.getPersonName());
-                baseViewHolder.setText(R.id.amountTextView, "总金额：" + data.getAssignAmount());
-                baseViewHolder.setText(R.id.noteTextView, "明细：" + data.getMonthList());
-                baseViewHolder.setText(R.id.datamodeTextView, data.getOffDaysNote());
+            public int getLayoutId(int position) {
+                return R.layout.assign_recorddetailslist_item;
+            }
+
+            @Override
+            public void bindData(MyViewHolder myViewHolder, AssignGroupByPerson data) {
+                myViewHolder.setText(R.id.monthTextView, data.getPersonName());
+                myViewHolder.setText(R.id.amountTextView, "总金额：" + data.getAssignAmount());
+                myViewHolder.setText(R.id.noteTextView, "明细：" + data.getMonthList());
+                myViewHolder.setText(R.id.datamodeTextView, data.getOffDaysNote());
             }
         };
     }

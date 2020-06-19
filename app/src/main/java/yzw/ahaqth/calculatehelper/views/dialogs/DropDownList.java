@@ -2,7 +2,6 @@ package yzw.ahaqth.calculatehelper.views.dialogs;
 
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
@@ -14,28 +13,32 @@ import java.util.List;
 
 import yzw.ahaqth.calculatehelper.R;
 import yzw.ahaqth.calculatehelper.views.MyDivideItemDecoration;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseAdapter;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
+import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
 
 public class DropDownList<T> extends PopupWindow {
     private TextView anchorView;
     private List<T> mList;
-    private BaseAdapter<T> adapter;
+    private MyAdapter<T> adapter;
 
     public DropDownList(@NonNull final TextView anchorView, List<T> list){
         this.anchorView = anchorView;
         mList = list;
-        adapter = new BaseAdapter<T>(R.layout.dropdown_list_item,mList) {
+        adapter = new MyAdapter<T>(mList) {
             @Override
-            public void bindData(BaseViewHolder baseViewHolder, final T data) {
-                baseViewHolder.setText(R.id.textview,data.toString());
-                baseViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+            public void bindData(MyViewHolder myViewHolder, final T data) {
+                myViewHolder.setText(R.id.textview,data.toString());
+                myViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         anchorView.setText(data.toString());
                         dismiss();
                     }
                 });
+            }
+
+            @Override
+            public int getLayoutId(int position) {
+                return R.layout.dropdown_list_item;
             }
         };
         initialView();

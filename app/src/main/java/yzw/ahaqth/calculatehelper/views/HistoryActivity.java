@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.PermissionChecker;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -15,9 +14,7 @@ import yzw.ahaqth.calculatehelper.moduls.Record;
 import yzw.ahaqth.calculatehelper.tools.DateUtils;
 import yzw.ahaqth.calculatehelper.tools.DbHelper;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
-import yzw.ahaqth.calculatehelper.tools.Tools;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseAdapter;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
+import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
 import yzw.ahaqth.calculatehelper.views.dialogs.LoadingDialog;
 import yzw.ahaqth.calculatehelper.views.dialogs.SelectListPopWindow;
@@ -36,27 +33,17 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
-import android.util.JsonReader;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONReader;
 import com.mcxtzhang.swipemenulib.SwipeMenuLayout;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.security.Permission;
-import java.security.Permissions;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -65,7 +52,7 @@ import java.util.List;
 public class HistoryActivity extends AppCompatActivity {
     public static int SCREEN_WIDTH, SCREEN_HEIGHT;
     private RecyclerView recyclerView;
-    private BaseAdapter<Record> recordAdapter;
+    private MyAdapter<Record> recordAdapter;
     private List<Record> list;
     private View slideMenu, menuToggle;
     private AnimatorSet showAnimatorSet, hideAnimatorSet;
@@ -80,14 +67,14 @@ public class HistoryActivity extends AppCompatActivity {
         SCREEN_HEIGHT = dm.heightPixels;
 
         list = new ArrayList<>();
-        recordAdapter = new BaseAdapter<Record>(R.layout.record_item_layout, list) {
+        recordAdapter = new MyAdapter<Record>(list) {
             @Override
-            public void bindData(final BaseViewHolder baseViewHolder, final Record data) {
-                baseViewHolder.setText(R.id.recordtime_textview, "记录时间：" + data.getRecordTime().format(DateUtils.getYyyyMdHHmmss_Formatter()));
-                baseViewHolder.setText(R.id.amount_textview, "总金额：" + data.getTotalAmount());
-                baseViewHolder.setText(R.id.person_count_textview, "分配人数：" + data.getPersonCount());
-                final SwipeMenuLayout swipeMenuLayout = baseViewHolder.getView(R.id.swipeMenuLayout);
-                baseViewHolder.getView(R.id.swipe_menu_del).setOnClickListener(new View.OnClickListener() {
+            public void bindData(final MyViewHolder myViewHolder, final Record data) {
+                myViewHolder.setText(R.id.recordtime_textview, "记录时间：" + data.getRecordTime().format(DateUtils.getYyyyMdHHmmss_Formatter()));
+                myViewHolder.setText(R.id.amount_textview, "总金额：" + data.getTotalAmount());
+                myViewHolder.setText(R.id.person_count_textview, "分配人数：" + data.getPersonCount());
+                final SwipeMenuLayout swipeMenuLayout = myViewHolder.getView(R.id.swipeMenuLayout);
+                myViewHolder.getView(R.id.swipe_menu_del).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         swipeMenuLayout.smoothClose();
@@ -97,8 +84,8 @@ public class HistoryActivity extends AppCompatActivity {
                                     public void onDismiss(boolean confirmFlag, Object... values) {
                                         if (confirmFlag) {
                                             DbManager.deleHistory(data.getRecordTime());
-                                            list.remove(baseViewHolder.getAdapterPosition());
-                                            recordAdapter.notifyItemRemoved(baseViewHolder.getAdapterPosition());
+                                            list.remove(myViewHolder.getAdapterPosition());
+                                            recordAdapter.notifyItemRemoved(myViewHolder.getAdapterPosition());
                                         }
                                     }
                                 })
@@ -106,13 +93,13 @@ public class HistoryActivity extends AppCompatActivity {
 
                     }
                 });
-                baseViewHolder.getView(R.id.swipe_menu_edit).setOnClickListener(new View.OnClickListener() {
+                myViewHolder.getView(R.id.swipe_menu_edit).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         edit(data);
                     }
                 });
-                baseViewHolder.getView(R.id.root).setOnClickListener(new View.OnClickListener() {
+                myViewHolder.getView(R.id.root).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         Intent intent = new Intent(HistoryActivity.this, ShowRecordDetailsActivity.class);
@@ -120,6 +107,11 @@ public class HistoryActivity extends AppCompatActivity {
                         startActivity(intent);
                     }
                 });
+            }
+
+            @Override
+            public int getLayoutId(int position) {
+                return R.layout.record_item_layout;
             }
         };
         mHadler = new Handler(new Handler.Callback() {
@@ -199,6 +191,13 @@ public class HistoryActivity extends AppCompatActivity {
             public void onClick(View v) {
                 hideMenu();
                 showBackupFileList();
+            }
+        });
+        findViewById(R.id.remainButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hideMenu();
+                startActivity(new Intent(HistoryActivity.this, ShowRemain.class));
             }
         });
         slideMenu = findViewById(R.id.slideMenu);

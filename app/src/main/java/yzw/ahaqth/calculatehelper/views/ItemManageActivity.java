@@ -7,7 +7,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,18 +18,15 @@ import java.util.List;
 import yzw.ahaqth.calculatehelper.R;
 import yzw.ahaqth.calculatehelper.moduls.Item;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
-import yzw.ahaqth.calculatehelper.views.adapters.ItemViewTypeSupport;
-import yzw.ahaqth.calculatehelper.views.adapters.MultiTypeAdapter;
-import yzw.ahaqth.calculatehelper.views.adapters.MultiTypeModul;
+import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
 import yzw.ahaqth.calculatehelper.views.dialogs.SingleEditTextDialog;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
 public class ItemManageActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
-    private List<MultiTypeModul> itemList;
-    private MultiTypeAdapter adapter;
+    private List<Item> itemList;
+    private MyAdapter<Item> adapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,42 +40,48 @@ public class ItemManageActivity extends AppCompatActivity {
             }
         });
         generateData();
-        adapter = new MultiTypeAdapter(itemList) {
+        adapter = new MyAdapter<Item>(itemList) {
             @Override
-            public void bindData(final BaseViewHolder baseViewHolder, MultiTypeModul data) {
-                if(data.getItemViewType() == ItemViewTypeSupport.TYPE_ITEM_BUTTON){
-                    baseViewHolder.getView(R.id.button).setOnClickListener(new View.OnClickListener() {
+            public void bindData(final MyViewHolder myViewHolder, Item data) {
+                if(myViewHolder.getAdapterPosition() == itemList.size() - 1){
+                    myViewHolder.getView(R.id.button).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            add(baseViewHolder.getAdapterPosition());
+                            add(myViewHolder.getAdapterPosition());
                         }
                     });
-                }else if(data.getItemViewType() == ItemViewTypeSupport.TYPE_ITEM){
-                    final Item item = (Item) data;
-                    final SwipeMenuLayout menuLayout = baseViewHolder.getView(R.id.swipemenulayout);
-                    baseViewHolder.setText(R.id.nameTextView,item.getName());
-                    baseViewHolder.getView(R.id.root).setOnClickListener(new View.OnClickListener() {
+                }else{
+                    final SwipeMenuLayout menuLayout = myViewHolder.getView(R.id.swipemenulayout);
+                    myViewHolder.setText(R.id.nameTextView,data.getName());
+                    myViewHolder.getView(R.id.root).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             menuLayout.smoothExpand();
                         }
                     });
-                    baseViewHolder.getView(R.id.dele).setOnClickListener(new View.OnClickListener() {
+                    myViewHolder.getView(R.id.dele).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             menuLayout.smoothClose();
-                            dele(baseViewHolder.getAdapterPosition());
+                            dele(myViewHolder.getAdapterPosition());
                         }
                     });
-                    baseViewHolder.getView(R.id.edit).setOnClickListener(new View.OnClickListener() {
+                    myViewHolder.getView(R.id.edit).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             menuLayout.smoothClose();
-                            edit(baseViewHolder.getAdapterPosition());
+                            edit(myViewHolder.getAdapterPosition());
                         }
                     });
 
                 }
+            }
+
+            @Override
+            public int getLayoutId(int position) {
+                if(position == itemList.size() - 1)
+                    return R.layout.item_additem;
+                return R.layout.item_item;
             }
         };
         recyclerView = findViewById(R.id.recyclerview);
@@ -93,12 +95,7 @@ public class ItemManageActivity extends AppCompatActivity {
         List<Item> items = DbManager.findAll(Item.class);
         itemList = new ArrayList<>();
         itemList.addAll(items);
-        itemList.add(new MultiTypeModul() {
-            @Override
-            public int getItemViewType() {
-                return ItemViewTypeSupport.TYPE_ITEM_BUTTON;
-            }
-        });
+        itemList.add(new Item());
     }
 
     private void add(final int position) {

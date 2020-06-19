@@ -12,10 +12,7 @@ import android.widget.TextView;
 import com.mcxtzhang.swipemenulib.SwipeMenuLayout;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -29,19 +26,15 @@ import yzw.ahaqth.calculatehelper.R;
 import yzw.ahaqth.calculatehelper.moduls.RecordDetailsGroupByItem;
 import yzw.ahaqth.calculatehelper.moduls.Remain;
 import yzw.ahaqth.calculatehelper.tools.DateUtils;
-import yzw.ahaqth.calculatehelper.tools.DbHelper;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseAdapter;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
-import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
+import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
 import yzw.ahaqth.calculatehelper.views.dialogs.ToastFactory;
-import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
 public class WorkMainActivity extends AppCompatActivity {
     private String TAG = "殷宗旺";
     private final int HISTORY_REQUESTCODE = 0x01;
     private List<RecordDetailsGroupByItem> dataList;
-    private BaseAdapter<RecordDetailsGroupByItem> adapter;
+    private MyAdapter<RecordDetailsGroupByItem> adapter;
     private RecyclerView recyclerView;
     private LocalDateTime recordTime;
     private TextView recordTimeTextView, titleTextView;
@@ -51,14 +44,19 @@ public class WorkMainActivity extends AppCompatActivity {
 
     private void initial() {
         dataList = new ArrayList<>();
-        adapter = new BaseAdapter<RecordDetailsGroupByItem>(R.layout.recordgroupbyitem_item_layout, dataList) {
+        adapter = new MyAdapter<RecordDetailsGroupByItem>(dataList) {
             @Override
-            public void bindData(final BaseViewHolder baseViewHolder, final RecordDetailsGroupByItem data) {
-                baseViewHolder.setText(R.id.itemname_textview, data.getItemName());
-                baseViewHolder.setText(R.id.amount_textview, "总金额：" + data.getTotalAmount());
-                baseViewHolder.setText(R.id.note_textview, data.getMonthNote());
-                final SwipeMenuLayout menuLayout = baseViewHolder.getView(R.id.swipeMenuLayout);
-                baseViewHolder.getView(R.id.swipe_menu_del).setOnClickListener(new View.OnClickListener() {
+            public int getLayoutId(int position) {
+                return R.layout.recordgroupbyitem_item_layout;
+            }
+
+            @Override
+            public void bindData(final MyViewHolder myViewHolder, final RecordDetailsGroupByItem data) {
+                myViewHolder.setText(R.id.itemname_textview, data.getItemName());
+                myViewHolder.setText(R.id.amount_textview, "总金额：" + data.getTotalAmount());
+                myViewHolder.setText(R.id.note_textview, data.getMonthNote());
+                final SwipeMenuLayout menuLayout = myViewHolder.getView(R.id.swipeMenuLayout);
+                myViewHolder.getView(R.id.swipe_menu_del).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         menuLayout.smoothClose();
@@ -203,7 +201,7 @@ public class WorkMainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_work_main);
         recordTime = LocalDateTime.now();
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {

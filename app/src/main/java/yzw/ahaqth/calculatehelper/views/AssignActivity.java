@@ -32,8 +32,7 @@ import yzw.ahaqth.calculatehelper.moduls.RemainDetails;
 import yzw.ahaqth.calculatehelper.tools.BigDecimalHelper;
 import yzw.ahaqth.calculatehelper.tools.DateUtils;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseAdapter;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
+import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
 import yzw.ahaqth.calculatehelper.views.dialogs.InputNumberDialog;
 import yzw.ahaqth.calculatehelper.views.dialogs.LoadingDialog;
@@ -51,13 +50,13 @@ public class AssignActivity extends AppCompatActivity {
     private AppCompatCheckBox showAssignDetails;
     private List<AssignGroupByPerson> assignGroupByPersonList;
     private List<RecordDetailsGroupByMonth> recordDetailsGroupByMonthList;
-    private BaseAdapter<RecordDetailsGroupByMonth> recordDetailsAdapter;
-    private BaseAdapter<AssignGroupByPerson> assignAdapter;
+    private MyAdapter<RecordDetailsGroupByMonth> recordDetailsAdapter;
+    private MyAdapter<AssignGroupByPerson> assignAdapter;
     private Handler mHandler;
     private LoadingDialog loadingDialog;
 
     private List<Person> personList;
-    private BaseAdapter<Person> personAdapter;
+    private MyAdapter<Person> personAdapter;
     private int currentIndex, maxDay = 30;
 
     private void initial() {
@@ -66,17 +65,17 @@ public class AssignActivity extends AppCompatActivity {
         this.recordDetailsGroupByMonthList = DbManager.getRecordGroupByMonth(recordTime);
         this.assignGroupByPersonList = DbManager.getAssignGroupByPersonList(recordTime);
 
-        this.recordDetailsAdapter = new BaseAdapter<RecordDetailsGroupByMonth>(R.layout.assign_recorddetailslist_item, recordDetailsGroupByMonthList) {
+        this.recordDetailsAdapter = new MyAdapter<RecordDetailsGroupByMonth>(recordDetailsGroupByMonthList) {
             @Override
-            public void bindData(final BaseViewHolder baseViewHolder, final RecordDetailsGroupByMonth data) {
-                baseViewHolder.setText(R.id.monthTextView, data.getMonth().format(DateUtils.getYyyyM_Formatter()));
-                baseViewHolder.setText(R.id.amountTextView, String.valueOf(data.getTotalAmount()));
-                baseViewHolder.setText(R.id.noteTextView, data.getItemNote());
-                baseViewHolder.setText(R.id.datamodeTextView, data.getDataMode().getDescribe());
-                baseViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+            public void bindData(final MyViewHolder myViewHolder, final RecordDetailsGroupByMonth data) {
+                myViewHolder.setText(R.id.monthTextView, data.getMonth().format(DateUtils.getYyyyM_Formatter()));
+                myViewHolder.setText(R.id.amountTextView, String.valueOf(data.getTotalAmount()));
+                myViewHolder.setText(R.id.noteTextView, data.getItemNote());
+                myViewHolder.setText(R.id.datamodeTextView, data.getDataMode().getDescribe());
+                myViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        currentIndex = baseViewHolder.getAdapterPosition();
+                        currentIndex = myViewHolder.getAdapterPosition();
                         if (data.getDataMode() == DataMode.UNASSIGNED) {
                             changeAdapter(2);
                         } else {
@@ -85,23 +84,28 @@ public class AssignActivity extends AppCompatActivity {
                     }
                 });
             }
-        };
-        this.personAdapter = new BaseAdapter<Person>(R.layout.onassign_work_item, personList) {
+
             @Override
-            public void bindData(final BaseViewHolder baseViewHolder, final Person data) {
-                baseViewHolder.setText(R.id.nameTextView, data.getName());
-                baseViewHolder.setText(R.id.assignAmountTextView, "当前分配：" + data.assignAmout);
-                baseViewHolder.setText(R.id.offDays, "请假：" + data.offDays);
-                baseViewHolder.setText(R.id.assignRatio, "分配系数：" + data.assignRatio);
-                baseViewHolder.getView(R.id.offDays).setOnClickListener(new View.OnClickListener() {
+            public int getLayoutId(int position) {
+                return R.layout.assign_recorddetailslist_item;
+            }
+        };
+        this.personAdapter = new MyAdapter<Person>(personList) {
+            @Override
+            public void bindData(final MyViewHolder myViewHolder, final Person data) {
+                myViewHolder.setText(R.id.nameTextView, data.getName());
+                myViewHolder.setText(R.id.assignAmountTextView, "当前分配：" + data.assignAmout);
+                myViewHolder.setText(R.id.offDays, "请假：" + data.offDays);
+                myViewHolder.setText(R.id.assignRatio, "分配系数：" + data.assignRatio);
+                myViewHolder.getView(R.id.offDays).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        showNumberInputPop(baseViewHolder, data);
+                        showNumberInputPop(myViewHolder, data);
                     }
                 });
-                final CheckBox checkBox = baseViewHolder.getView(R.id.checkbox);
+                final CheckBox checkBox = myViewHolder.getView(R.id.checkbox);
                 checkBox.setChecked(data.isSelected);
-                ImageView imageView = baseViewHolder.getView(R.id.imageview);
+                ImageView imageView = myViewHolder.getView(R.id.imageview);
                 imageView.setVisibility(autoAssignTB.isChecked() ? View.INVISIBLE : View.VISIBLE);
                 checkBox.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -110,9 +114,9 @@ public class AssignActivity extends AppCompatActivity {
                             if (data.isSelected) {
                                 data.assignAmout = 0;
                                 data.isSelected = false;
-                                personAdapter.notifyItemChanged(baseViewHolder.getAdapterPosition());
+                                personAdapter.notifyItemChanged(myViewHolder.getAdapterPosition());
                             } else {
-                                manualAssign(baseViewHolder.getAdapterPosition());
+                                manualAssign(myViewHolder.getAdapterPosition());
                             }
                         } else {
                             data.isSelected = checkBox.isChecked();
@@ -124,18 +128,28 @@ public class AssignActivity extends AppCompatActivity {
                 imageView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        manualAssign(baseViewHolder.getAdapterPosition());
+                        manualAssign(myViewHolder.getAdapterPosition());
                     }
                 });
             }
-        };
-        this.assignAdapter = new BaseAdapter<AssignGroupByPerson>(R.layout.assign_recorddetailslist_item, assignGroupByPersonList) {
+
             @Override
-            public void bindData(BaseViewHolder baseViewHolder, AssignGroupByPerson data) {
-                baseViewHolder.setText(R.id.monthTextView, data.getPersonName());
-                baseViewHolder.setText(R.id.amountTextView, "总金额：" + data.getAssignAmount());
-                baseViewHolder.setText(R.id.noteTextView, "明细：" + data.getMonthList());
-                baseViewHolder.setText(R.id.datamodeTextView, data.getOffDaysNote());
+            public int getLayoutId(int position) {
+                return R.layout.onassign_work_item;
+            }
+        };
+        this.assignAdapter = new MyAdapter<AssignGroupByPerson>( assignGroupByPersonList) {
+            @Override
+            public void bindData(MyViewHolder myViewHolder, AssignGroupByPerson data) {
+                myViewHolder.setText(R.id.monthTextView, data.getPersonName());
+                myViewHolder.setText(R.id.amountTextView, "总金额：" + data.getAssignAmount());
+                myViewHolder.setText(R.id.noteTextView, "明细：" + data.getMonthList());
+                myViewHolder.setText(R.id.datamodeTextView, data.getOffDaysNote());
+            }
+
+            @Override
+            public int getLayoutId(int position) {
+                return R.layout.assign_recorddetailslist_item;
             }
         };
         this.mHandler = new Handler(new Handler.Callback() {
@@ -153,7 +167,7 @@ public class AssignActivity extends AppCompatActivity {
         });
     }
 
-    private void showNumberInputPop(final BaseViewHolder baseViewHolder, final Person person) {
+    private void showNumberInputPop(final MyAdapter.MyViewHolder myViewHolder, final Person person) {
         NumberInputPopWindow numberInputPopWindow = new NumberInputPopWindow(this, maxDay).setOnDisMiss(new DialogCallback() {
             @Override
             public void onDismiss(boolean confirmFlag, Object... values) {
@@ -161,13 +175,13 @@ public class AssignActivity extends AppCompatActivity {
                     Double value = (Double) values[0];
                     person.offDays = value;
                     person.assignRatio = BigDecimalHelper.divide(BigDecimalHelper.minus(maxDay, value), maxDay, 2);
-                    baseViewHolder.setText(R.id.offDays, "请假：" + value);
-                    baseViewHolder.setText(R.id.assignRatio, "分配系数：" + person.assignRatio);
+                    myViewHolder.setText(R.id.offDays, "请假：" + value);
+                    myViewHolder.setText(R.id.assignRatio, "分配系数：" + person.assignRatio);
                     autoAssign();
                 }
             }
         });
-        numberInputPopWindow.show(baseViewHolder.getView(R.id.offDays));
+        numberInputPopWindow.show(myViewHolder.getView(R.id.offDays));
     }
 
 

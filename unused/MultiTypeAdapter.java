@@ -16,13 +16,13 @@ public abstract class MultiTypeAdapter extends BaseAdapter<MultiTypeModul>{
 
     @Override
     public int getItemViewType(int position) {
-        return mList.get(position).getItemViewType();
+        return mList.get(position).getItemViewType().ordinal();
     }
 
     @NonNull
     @Override
     public BaseViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        int layoutId = ItemViewTypeSupport.getLayoutId(viewType);
+        int layoutId = ItemViewType.values()[viewType].getLayoutId();
         View view = LayoutInflater.from(parent.getContext()).inflate(layoutId,parent,false);
         return new BaseViewHolder(view);
     }

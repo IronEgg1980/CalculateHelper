@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import yzw.ahaqth.calculatehelper.tools.DbManager;
-import yzw.ahaqth.calculatehelper.views.interfaces.DataMode;
 
 public class BackupEntity implements Serializable {
     private LocalDateTime backupTime;

@@ -1,28 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".views.PersonManageActivity">
+    tools:context=".views.WorkMainActivity">
 
     <include
         android:id="@+id/toolbar"
-        layout="@layout/toolbar_layout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        layout="@layout/toolbar_layout" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerview"
+    <TextView
+        android:id="@+id/recordtime_textview"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="记录时间："
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/recordtime_textview" />
     <LinearLayout
         android:id="@+id/slideMenu"
         android:clickable="true"
@@ -36,18 +47,48 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/addButton"
+            android:id="@+id/inputButton"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:gravity="center"
             android:padding="8dp"
-            android:text="新建"
+            android:text="数据录入"
             android:textAppearance="?android:attr/textAppearanceButton"
             android:textColor="@android:color/white"
             app:backgroundTint="@color/colorPrimary"
             app:cornerRadius="8dp"
-            app:icon="@drawable/ico_new1"
+            app:icon="@drawable/ic_input"
+            app:iconTint="@android:color/white"
+            app:rippleColor="@android:color/white" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/assignButton"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="8dp"
+            android:text="金额分配"
+            android:textAppearance="?android:attr/textAppearanceButton"
+            android:textColor="@android:color/white"
+            app:backgroundTint="@android:color/holo_orange_light"
+            app:cornerRadius="8dp"
+            app:icon="@drawable/ic_assign"
+            app:iconTint="@android:color/white"
+            app:rippleColor="@android:color/white" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/remainAssignButton"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="8dp"
+            android:text="余额管理"
+            android:textAppearance="?android:attr/textAppearanceButton"
+            android:textColor="@android:color/white"
+            app:backgroundTint="@android:color/holo_orange_dark"
+            app:cornerRadius="8dp"
+            app:icon="@drawable/ic_remain"
             app:iconTint="@android:color/white"
             app:rippleColor="@android:color/white" />
 
@@ -82,68 +123,6 @@
             app:icon="@drawable/item"
             app:iconTint="@android:color/white"
             app:rippleColor="@android:color/white" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/infomationButton"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:padding="8dp"
-            android:text="统计信息"
-            android:textAppearance="?android:attr/textAppearanceButton"
-            android:textColor="@android:color/white"
-            app:backgroundTint="@android:color/holo_orange_light"
-            app:cornerRadius="8dp"
-            app:icon="@drawable/ic_information"
-            app:iconTint="@android:color/white"
-            app:rippleColor="@android:color/white" />
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/backupButton"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:padding="8dp"
-            android:text="备份"
-            android:textAppearance="?android:attr/textAppearanceButton"
-            android:textColor="@android:color/white"
-            app:backgroundTint="@android:color/holo_green_dark"
-            app:cornerRadius="8dp"
-            app:icon="@drawable/ic_backup"
-            app:iconTint="@android:color/white"
-            app:rippleColor="@android:color/white" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/restoreButton"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:padding="8dp"
-            android:text="恢复"
-            android:textAppearance="?android:attr/textAppearanceButton"
-            android:textColor="@android:color/white"
-            app:backgroundTint="@android:color/holo_red_light"
-            app:cornerRadius="8dp"
-            app:icon="@drawable/ic_backup"
-            app:iconTint="@android:color/white"
-            app:rippleColor="@android:color/white" />
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/remainButton"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:padding="8dp"
-            android:text="余额"
-            android:textAppearance="?android:attr/textAppearanceButton"
-            android:textColor="@android:color/white"
-            app:backgroundTint="@android:color/holo_purple"
-            app:cornerRadius="8dp"
-            app:icon="@drawable/ic_remain"
-            app:iconTint="@android:color/white"
-            app:rippleColor="@android:color/white" />
     </LinearLayout>
 
     <ImageView
@@ -156,25 +135,4 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/slideMenu"
         app:layout_constraintTop_toTopOf="parent" />
-
-<!--    <com.google.android.material.button.MaterialButton-->
-<!--        android:id="@+id/addButton"-->
-<!--        android:textColor="@android:color/white"-->
-<!--        android:textStyle="bold"-->
-<!--        android:text="新建"-->
-<!--        android:gravity="center"-->
-<!--        android:layout_width="48dp"-->
-<!--        android:layout_height="48dp"-->
-<!--        android:layout_marginEnd="16dp"-->
-<!--        android:layout_marginBottom="16dp"-->
-<!--        android:textAppearance="?android:attr/textAppearanceButton"-->
-<!--        android:insetTop="0dp"-->
-<!--        android:insetBottom="0dp"-->
-<!--        android:insetLeft="0dp"-->
-<!--        android:insetRight="0dp"-->
-<!--        app:backgroundTint="@color/colorPrimary"-->
-<!--        app:rippleColor="@android:color/white"-->
-<!--        app:cornerRadius="24dp"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent" />-->
 </androidx.constraintlayout.widget.ConstraintLayout>

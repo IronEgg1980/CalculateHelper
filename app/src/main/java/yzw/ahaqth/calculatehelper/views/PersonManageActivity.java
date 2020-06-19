@@ -9,7 +9,6 @@ import android.widget.TextView;
 import com.mcxtzhang.swipemenulib.SwipeMenuLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,18 +18,15 @@ import java.util.List;
 import yzw.ahaqth.calculatehelper.R;
 import yzw.ahaqth.calculatehelper.moduls.Person;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
-import yzw.ahaqth.calculatehelper.views.adapters.ItemViewTypeSupport;
-import yzw.ahaqth.calculatehelper.views.adapters.MultiTypeAdapter;
-import yzw.ahaqth.calculatehelper.views.adapters.MultiTypeModul;
+import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
 import yzw.ahaqth.calculatehelper.views.dialogs.SingleEditTextDialog;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
 public class PersonManageActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
-    private List<MultiTypeModul> personList;
-    private MultiTypeAdapter adapter;
+    private List<Person> personList;
+    private MyAdapter<Person> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,32 +43,38 @@ public class PersonManageActivity extends AppCompatActivity {
 
         generateData();
 
-        adapter = new MultiTypeAdapter(personList) {
+        adapter = new MyAdapter<Person>(personList) {
             @Override
-            public void bindData(final BaseViewHolder baseViewHolder, MultiTypeModul data) {
-                if (data.getItemViewType() == ItemViewTypeSupport.TYPE_PERSON_BUTTON) {
-                    baseViewHolder.getView(R.id.button).setOnClickListener(new View.OnClickListener() {
+            public int getLayoutId(int position) {
+                if(position == personList.size() - 1)
+                    return R.layout.item_addbutton;
+                return R.layout.item_person_list;
+            }
+
+            @Override
+            public void bindData(final MyViewHolder myViewHolder, Person data) {
+                if (myViewHolder.getAdapterPosition() == personList.size() - 1) {
+                    myViewHolder.getView(R.id.button).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            addPerson(baseViewHolder.getAdapterPosition());
+                            addPerson(myViewHolder.getAdapterPosition());
                         }
                     });
-                } else if (data.getItemViewType() == ItemViewTypeSupport.TYPE_PERSON) {
-                    Person person = (Person) data;
-                    final SwipeMenuLayout menuLayout = baseViewHolder.getView(R.id.swipemenulayout);
-                    baseViewHolder.setText(R.id.item_person_list_name,person.getName());
-                    baseViewHolder.getView(R.id.edit).setOnClickListener(new View.OnClickListener() {
+                } else{
+                    final SwipeMenuLayout menuLayout = myViewHolder.getView(R.id.swipemenulayout);
+                    myViewHolder.setText(R.id.item_person_list_name,data.getName());
+                    myViewHolder.getView(R.id.edit).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             menuLayout.smoothClose();
-                            editPerson(baseViewHolder.getAdapterPosition());
+                            editPerson(myViewHolder.getAdapterPosition());
                         }
                     });
-                    baseViewHolder.getView(R.id.dele).setOnClickListener(new View.OnClickListener() {
+                    myViewHolder.getView(R.id.dele).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             menuLayout.smoothClose();
-                            delePerson(baseViewHolder.getAdapterPosition());
+                            delePerson(myViewHolder.getAdapterPosition());
                         }
                     });
                 }
@@ -95,12 +97,7 @@ public class PersonManageActivity extends AppCompatActivity {
     private void generateData(){
         personList = new ArrayList<>();
         personList.addAll(DbManager.findAll(Person.class));
-        personList.add(new MultiTypeModul() {
-            @Override
-            public int getItemViewType() {
-                return ItemViewTypeSupport.TYPE_PERSON_BUTTON;
-            }
-        });
+        personList.add(new Person());
     }
 
     private void addPerson(final int position) {

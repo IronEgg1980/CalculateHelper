@@ -15,15 +15,14 @@ import java.util.List;
 
 import yzw.ahaqth.calculatehelper.R;
 import yzw.ahaqth.calculatehelper.views.MyDivideItemDecoration;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseAdapter;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
+import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
 public class SelectListPopWindow extends PopupWindow {
     private Activity mActivity;
     private List<String> list;
     private DialogCallback onItemSelected;
-    private BaseAdapter<String> adapter;
+    private MyAdapter<String> adapter;
 
     public SelectListPopWindow setOnItemSelected(DialogCallback onItemSelected) {
         this.onItemSelected = onItemSelected;
@@ -42,11 +41,11 @@ public class SelectListPopWindow extends PopupWindow {
     }
 
     private void initialView() {
-        adapter = new BaseAdapter<String>(R.layout.dropdown_list_item,list) {
+        adapter = new MyAdapter<String>(list) {
             @Override
-            public void bindData(final BaseViewHolder baseViewHolder, final String data) {
-                baseViewHolder.setText(R.id.textview,data);
-                baseViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+            public void bindData(final MyViewHolder myViewHolder, final String data) {
+                myViewHolder.setText(R.id.textview,data);
+                myViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         dismiss();
@@ -55,6 +54,11 @@ public class SelectListPopWindow extends PopupWindow {
                         }
                     }
                 });
+            }
+
+            @Override
+            public int getLayoutId(int position) {
+                return R.layout.dropdown_list_item;
             }
         };
         View view = LayoutInflater.from(mActivity).inflate(R.layout.dropdown_popwindow,null);

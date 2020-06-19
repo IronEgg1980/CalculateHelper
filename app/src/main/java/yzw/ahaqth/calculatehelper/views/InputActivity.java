@@ -1,6 +1,5 @@
 package yzw.ahaqth.calculatehelper.views;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,7 +8,6 @@ import android.os.Message;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
@@ -18,12 +16,10 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatToggleButton;
-import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -40,10 +36,7 @@ import yzw.ahaqth.calculatehelper.moduls.RecordDetails;
 import yzw.ahaqth.calculatehelper.tools.BigDecimalHelper;
 import yzw.ahaqth.calculatehelper.tools.DateUtils;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
-import yzw.ahaqth.calculatehelper.views.adapters.BaseViewHolder;
-import yzw.ahaqth.calculatehelper.views.adapters.ItemViewTypeSupport;
-import yzw.ahaqth.calculatehelper.views.adapters.MultiTypeAdapter;
-import yzw.ahaqth.calculatehelper.views.adapters.MultiTypeModul;
+import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
 import yzw.ahaqth.calculatehelper.views.dialogs.DropDownList;
 import yzw.ahaqth.calculatehelper.views.dialogs.InputNumberDialog;
@@ -53,28 +46,36 @@ import yzw.ahaqth.calculatehelper.views.interfaces.DataMode;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
 public class InputActivity extends AppCompatActivity {
-    protected class Adapter extends MultiTypeAdapter {
+    protected class Adapter extends MyAdapter<AssignInMonthEntity> {
 
         Adapter() {
             super(list);
         }
 
         @Override
-        public void bindData(final BaseViewHolder baseViewHolder, MultiTypeModul data) {
-            if (data.getItemViewType() == ItemViewTypeSupport.TYPE_MONTH_ADDBUTTON) {
-                baseViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+        public int getLayoutId(int position) {
+            if(list.get(position).amount == Integer.MIN_VALUE){
+                return R.layout.select_month_item_addbutton;
+            }
+            return R.layout.select_month_item;
+        }
+
+        @Override
+        public void bindData(final MyViewHolder myViewHolder, AssignInMonthEntity data) {
+            if (data.amount == Integer.MIN_VALUE) {
+                myViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        addMonth(baseViewHolder.getAdapterPosition());
+                        addMonth(myViewHolder.getAdapterPosition());
                     }
                 });
-            } else if (data.getItemViewType() == ItemViewTypeSupport.TYPE_MONTH) {
+            } else {
                 final AssignInMonthEntity entity = (AssignInMonthEntity) data;
 
-                baseViewHolder.setText(R.id.monthTextView, entity.month.format(DateUtils.getYyyyM_Formatter()));
-                baseViewHolder.setText(R.id.amountTextView, String.valueOf(entity.amount));
+                myViewHolder.setText(R.id.monthTextView, entity.month.format(DateUtils.getYyyyM_Formatter()));
+                myViewHolder.setText(R.id.amountTextView, String.valueOf(entity.amount));
 
-                final CheckBox checkBox = baseViewHolder.getView(R.id.checkbox);
+                final CheckBox checkBox = myViewHolder.getView(R.id.checkbox);
                 checkBox.setChecked(entity.isSelected);
                 checkBox.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -83,9 +84,9 @@ public class InputActivity extends AppCompatActivity {
                             if (entity.isSelected) {
                                 entity.amount = 0;
                                 entity.isSelected = false;
-                                adpter.notifyItemChanged(baseViewHolder.getAdapterPosition());
+                                notifyItemChanged(myViewHolder.getAdapterPosition());
                             } else {
-                                manualAssign(baseViewHolder.getAdapterPosition());
+                                manualAssign(myViewHolder.getAdapterPosition());
                             }
                         } else {
                             entity.isSelected = checkBox.isChecked();
@@ -94,13 +95,13 @@ public class InputActivity extends AppCompatActivity {
                     }
                 });
 
-                ImageView imageView = baseViewHolder.getView(R.id.imageview);
+                ImageView imageView = myViewHolder.getView(R.id.imageview);
                 imageView.setVisibility(entity.isManualAssign ? View.VISIBLE : View.INVISIBLE);
                 imageView.setEnabled(entity.isManualAssign);
                 imageView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        manualAssign(baseViewHolder.getAdapterPosition());
+                        manualAssign(myViewHolder.getAdapterPosition());
                     }
                 });
             }
@@ -111,9 +112,9 @@ public class InputActivity extends AppCompatActivity {
     private DropDownList dropDownList;
     private TextView itemNameTextView;
     private EditText itemAmountEditText;
-    private MultiTypeAdapter adpter;
+    private Adapter adpter;
     private RecyclerView recyclerView;
-    private List<MultiTypeModul> list;
+    private List<AssignInMonthEntity> list;
     private boolean manualFlag = false;
     private double totalAmount;
     private LocalDateTime recordTime; // 传入参数
@@ -138,12 +139,9 @@ public class InputActivity extends AppCompatActivity {
             entity.month = localDate.minusMonths(i);
             list.add(entity);
         }
-        list.add(new MultiTypeModul() {
-            @Override
-            public int getItemViewType() {
-                return ItemViewTypeSupport.TYPE_MONTH_ADDBUTTON;
-            }
-        });
+        AssignInMonthEntity assignInMonthEntity = new AssignInMonthEntity();
+        assignInMonthEntity.amount = Integer.MIN_VALUE;
+        list.add(assignInMonthEntity);
     }
 
     private void initial() {
@@ -219,10 +217,9 @@ public class InputActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable s) {
                 if (manualFlag) {
-                    for (MultiTypeModul modul : list) {
-                        if (modul.getItemViewType() != ItemViewTypeSupport.TYPE_MONTH)
+                    for (AssignInMonthEntity entity : list) {
+                        if (entity.amount == Integer.MIN_VALUE)
                             continue;
-                        AssignInMonthEntity entity = (AssignInMonthEntity) modul;
                         entity.amount = 0;
                         entity.isSelected = false;
                     }
@@ -294,7 +291,7 @@ public class InputActivity extends AppCompatActivity {
     }
 
     private void addMonth(int position) {
-        AssignInMonthEntity entity = (AssignInMonthEntity) list.get(position - 1);
+        AssignInMonthEntity entity =list.get(position - 1);
         AssignInMonthEntity newEntity = new AssignInMonthEntity();
         newEntity.month = entity.month.minusMonths(1);
         list.add(position, newEntity);
@@ -308,10 +305,9 @@ public class InputActivity extends AppCompatActivity {
         if (!TextUtils.isEmpty(itemAmountEditText.getText())) {
             totalAmount = Double.parseDouble(itemAmountEditText.getText().toString().trim());
         }
-        for (MultiTypeModul modul : list) {
-            if (modul.getItemViewType() != ItemViewTypeSupport.TYPE_MONTH)
+        for (AssignInMonthEntity entity : list) {
+            if (entity.amount == Integer.MIN_VALUE)
                 continue;
-            AssignInMonthEntity entity = (AssignInMonthEntity) modul;
             entity.amount = 0;
             if (entity.isSelected) {
                 selectedList.add(entity);
@@ -341,10 +337,9 @@ public class InputActivity extends AppCompatActivity {
             totalAmount = Double.parseDouble(itemAmountEditText.getText().toString().trim());
         }
         double value = totalAmount;
-        for (MultiTypeModul modul : list) {
-            if (modul.getItemViewType() != ItemViewTypeSupport.TYPE_MONTH)
+        for (AssignInMonthEntity entity : list) {
+            if (entity.amount == Integer.MIN_VALUE)
                 continue;
-            AssignInMonthEntity entity = (AssignInMonthEntity) modul;
             if (entity.isSelected) {
                 value = BigDecimalHelper.minus(value, entity.amount);
             }
@@ -354,10 +349,9 @@ public class InputActivity extends AppCompatActivity {
 
     private void toggleAssignMode() {
         manualFlag = manulAssignTB.isChecked();
-        for (MultiTypeModul modul : list) {
-            if (modul.getItemViewType() != ItemViewTypeSupport.TYPE_MONTH)
+        for (AssignInMonthEntity entity : list) {
+            if (entity.amount == Integer.MIN_VALUE)
                 continue;
-            AssignInMonthEntity entity = (AssignInMonthEntity) modul;
             entity.isSelected = false;
             entity.amount = 0;
             entity.isManualAssign = manualFlag;
@@ -396,10 +390,9 @@ public class InputActivity extends AppCompatActivity {
     private void reset() {
         itemNameTextView.setText("");
         itemAmountEditText.setText("0.00");
-        for (MultiTypeModul modul : list) {
-            if (modul.getItemViewType() != ItemViewTypeSupport.TYPE_MONTH)
+        for (AssignInMonthEntity entity : list) {
+            if (entity.amount == Integer.MIN_VALUE)
                 continue;
-            AssignInMonthEntity entity = (AssignInMonthEntity) modul;
             entity.isSelected = false;
             entity.amount = 0;
         }
@@ -421,10 +414,9 @@ public class InputActivity extends AppCompatActivity {
             itemAmountEditText.setError("金额有误");
             return false;
         }
-        for (MultiTypeModul modul : list) {
-            if (modul.getItemViewType() != ItemViewTypeSupport.TYPE_MONTH)
+        for (AssignInMonthEntity entity : list) {
+            if (entity.amount == Integer.MIN_VALUE)
                 continue;
-            AssignInMonthEntity entity = (AssignInMonthEntity) modul;
             if (entity.isSelected) {
                 amount = BigDecimalHelper.minus(amount, entity.amount);
             }
@@ -448,10 +440,9 @@ public class InputActivity extends AppCompatActivity {
                 if (inputResults == null)
                     inputResults = new ArrayList<>();
                 inputResults.clear();
-                for (MultiTypeModul modul : list) {
-                    if (modul.getItemViewType() != ItemViewTypeSupport.TYPE_MONTH)
+                for (AssignInMonthEntity entity : list) {
+                    if (entity.amount == Integer.MIN_VALUE)
                         continue;
-                    AssignInMonthEntity entity = (AssignInMonthEntity) modul;
                     if (entity.isSelected) {
                         RecordDetails details = DbManager.findOne(RecordDetails.class, "itemname = ? and recordtime = ? and month = ?",
                                 itemName, String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8))), String.valueOf(entity.month.toEpochDay()));
