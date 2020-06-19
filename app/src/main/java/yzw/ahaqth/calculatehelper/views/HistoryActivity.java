@@ -390,18 +390,10 @@ public class HistoryActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
-
-        DbHelper.initial(this);// 数据库初始化
-
         initial();
         initialView();
     }
 
-    @Override
-    protected void onDestroy() {
-        DbHelper.onDestory();
-        super.onDestroy();
-    }
 
     @Override
     protected void onStart() {
