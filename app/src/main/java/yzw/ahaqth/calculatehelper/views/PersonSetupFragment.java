@@ -1,16 +1,20 @@
 package yzw.ahaqth.calculatehelper.views;
 
 import android.os.Bundle;
+
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.text.TextUtils;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.mcxtzhang.swipemenulib.SwipeMenuLayout;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,26 +27,17 @@ import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
 import yzw.ahaqth.calculatehelper.views.dialogs.SingleEditTextDialog;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
-public class PersonManageActivity extends AppCompatActivity {
+public class PersonSetupFragment extends Fragment {
     private RecyclerView recyclerView;
     private List<Person> personList;
     private MyAdapter<Person> adapter;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.recyclerview_layout);
-        TextView titleTextView = findViewById(R.id.titleTextView);
-        titleTextView.setText("人员管理");
-        findViewById(R.id.navagationIco).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
-
-        generateData();
-
+        personList = new ArrayList<>();
+        personList.addAll(DbManager.findAll(Person.class));
+        personList.add(new Person());
         adapter = new MyAdapter<Person>(personList) {
             @Override
             public int getLayoutId(int position) {
@@ -80,7 +75,12 @@ public class PersonManageActivity extends AppCompatActivity {
                 }
             }
         };
-        GridLayoutManager layoutManager = new GridLayoutManager(this,2);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        GridLayoutManager layoutManager = new GridLayoutManager(getContext(),2);
         layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
@@ -89,19 +89,15 @@ public class PersonManageActivity extends AppCompatActivity {
                 return 1;
             }
         });
-        recyclerView = findViewById(R.id.recyclerview);
+        View view = inflater.inflate(R.layout.recyclerview_layout,container,false);
+        recyclerView = view.findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
-    }
-
-    private void generateData(){
-        personList = new ArrayList<>();
-        personList.addAll(DbManager.findAll(Person.class));
-        personList.add(new Person());
+        return view;
     }
 
     private void addPerson(final int position) {
-        final SingleEditTextDialog dialog = new SingleEditTextDialog(this);
+        final SingleEditTextDialog dialog = new SingleEditTextDialog(getContext());
         dialog.setDialogCallback(new DialogCallback() {
             @Override
             public void onDismiss(boolean confirmFlag, Object... values) {
@@ -126,7 +122,7 @@ public class PersonManageActivity extends AppCompatActivity {
 
     private void editPerson(final int position) {
         final Person person = (Person) personList.get(position);
-        final SingleEditTextDialog dialog = new SingleEditTextDialog(this);
+        final SingleEditTextDialog dialog = new SingleEditTextDialog(getContext());
         dialog.setDialogCallback(new DialogCallback() {
             @Override
             public void onDismiss(boolean confirmFlag, Object... values) {
@@ -180,6 +176,6 @@ public class PersonManageActivity extends AppCompatActivity {
                 }
             }
         });
-        dialogFactory.show(getSupportFragmentManager(),"dele");
+        dialogFactory.show(getFragmentManager(),"dele");
     }
 }

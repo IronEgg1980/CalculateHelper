@@ -1,11 +1,13 @@
 package yzw.ahaqth.calculatehelper.views;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 
 import java.util.List;
@@ -27,13 +29,22 @@ public class ShowRemain extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_remain);
         initial();
+        TextView textView = findViewById(R.id.titleTextView);
+        textView.setText("余额查询");
+        findViewById(R.id.navagationIco).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
         RecyclerView recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.addItemDecoration(new MyDivideItemDecoration());
+        recyclerView.addItemDecoration(new DividerItemDecoration(this,DividerItemDecoration.VERTICAL));
         recyclerView.setAdapter(adapter);
-        TextView textView = findViewById(R.id.remain);
-        String remain ="总余额：" + DbManager.findFirst(Remain.class).getAmount();
-        textView.setText(remain);
+        TextView textView1 = findViewById(R.id.remain);
+        Remain remain = DbManager.findFirst(Remain.class);
+        String remainString = remain == null ? "合计：" + 0 : "合计：" + remain.getAmount();
+        textView1.setText(remainString);
     }
 
     private void initial() {
@@ -50,8 +61,8 @@ public class ShowRemain extends AppCompatActivity {
                 myViewHolder.setText(R.id.monthTextView, data.getMonth().format(DateUtils.getYyyyM_Formatter()));
                 double amount = data.getVariableAmount();
                 TextView textView = myViewHolder.getView(R.id.amountTextView);
-                String amountString = amount > 0 ? "+"+amount : "-"+amount;
-                textView.setTextColor(amount > 0? Color.GREEN:Color.RED);
+                String amountString = amount > 0 ? "+" + amount : "-" + amount;
+                textView.setTextColor(amount > 0 ? Color.GREEN : Color.RED);
                 textView.setText(amountString);
             }
 

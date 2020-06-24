@@ -4,14 +4,23 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <ImageButton
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/button"
-        android:background="@android:color/transparent"
-        android:layout_width="80dp"
-        android:layout_height="@dimen/Height_Item_PersonManage"
-        android:src="@drawable/person_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center_vertical"
+        android:text="增加成员"
+        android:textAppearance="?android:attr/textAppearanceButton"
+        android:textSize="@dimen/TextSize_M"
+        app:backgroundTint="@android:color/transparent"
+        app:icon="@drawable/person_add"
+        app:iconPadding="16dp"
+        app:iconSize="32dp"
+        app:iconTint="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:rippleColor="@color/colorPrimary" />
 </androidx.constraintlayout.widget.ConstraintLayout>
 

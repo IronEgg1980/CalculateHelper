@@ -1,14 +1,17 @@
 package yzw.ahaqth.calculatehelper.views;
 
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.Gravity;
-import android.view.View;
-import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.text.TextUtils;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.mcxtzhang.swipemenulib.SwipeMenuLayout;
 
@@ -23,23 +26,21 @@ import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
 import yzw.ahaqth.calculatehelper.views.dialogs.SingleEditTextDialog;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
-public class ItemManageActivity extends AppCompatActivity {
-    private RecyclerView recyclerView;
-    private List<Item> itemList;
+public class ItemSetupFragment extends Fragment {
     private MyAdapter<Item> adapter;
+    private List<Item> itemList;
+    private RecyclerView recyclerView;
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.recyclerview_layout);
-        TextView titleTextView = findViewById(R.id.titleTextView);
-        titleTextView.setText("记录项目管理");
-        findViewById(R.id.navagationIco).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
-        generateData();
+        itemList = new ArrayList<>();
+        itemList.addAll(DbManager.findAll(Item.class));
+        itemList.add(new Item());
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         adapter = new MyAdapter<Item>(itemList) {
             @Override
             public void bindData(final MyViewHolder myViewHolder, Item data) {
@@ -84,22 +85,16 @@ public class ItemManageActivity extends AppCompatActivity {
                 return R.layout.item_item;
             }
         };
-        recyclerView = findViewById(R.id.recyclerview);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(adapter);
+        View view = inflater.inflate(R.layout.recyclerview_layout,container,false);
+        recyclerView = view.findViewById(R.id.recyclerview);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.addItemDecoration(new MyDivideItemDecoration());
-
-    }
-
-    private void generateData(){
-        List<Item> items = DbManager.findAll(Item.class);
-        itemList = new ArrayList<>();
-        itemList.addAll(items);
-        itemList.add(new Item());
+        recyclerView.setAdapter(adapter);
+        return view;
     }
 
     private void add(final int position) {
-        final SingleEditTextDialog dialog = new SingleEditTextDialog(this);
+        final SingleEditTextDialog dialog = new SingleEditTextDialog(getContext());
         dialog.setDialogCallback(new DialogCallback() {
             @Override
             public void onDismiss(boolean confirmFlag, Object... values) {
@@ -130,8 +125,8 @@ public class ItemManageActivity extends AppCompatActivity {
     }
 
     private void edit(final int position) {
-        final Item item = (Item) itemList.get(position);
-        final SingleEditTextDialog dialog = new SingleEditTextDialog(this);
+        final Item item = itemList.get(position);
+        final SingleEditTextDialog dialog = new SingleEditTextDialog(getContext());
         dialog.setDialogCallback(new DialogCallback() {
             @Override
             public void onDismiss(boolean confirmFlag, Object... values) {
@@ -160,7 +155,7 @@ public class ItemManageActivity extends AppCompatActivity {
     }
 
     private void dele(final int position){
-        final Item item = (Item) itemList.get(position);
+        final Item item = itemList.get(position);
         DialogFactory dialogFactory = DialogFactory.getConfirmDialog("请确认",
                 "是否删除 【"+item.getName()+"】 ？",
                 R.drawable.warnning);
@@ -174,6 +169,6 @@ public class ItemManageActivity extends AppCompatActivity {
                 }
             }
         });
-        dialogFactory.show(getSupportFragmentManager(),"dele");
+        dialogFactory.show(getFragmentManager(),"dele");
     }
 }

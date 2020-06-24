@@ -214,7 +214,7 @@ public class BrokenLineGraph extends View {
     }
 
     private void initial(Context context) {
-        this.screenWidth = HistoryActivity.SCREEN_WIDTH;
+        this.screenWidth = MainActivity.SCREEN_WIDTH;
 
         this.padding = Tools.dip2px(context, 48);
         this.itemWidth = Tools.dip2px(context, 64);
