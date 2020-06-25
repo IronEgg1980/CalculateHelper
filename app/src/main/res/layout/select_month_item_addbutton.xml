@@ -5,6 +5,7 @@
     android:layout_margin="8dp"
     android:textSize="@dimen/TextSize_M"
     android:text="更多月份..."
-    android:gravity="center"
-    android:layout_width="match_parent"
-    android:layout_height="80dp"/>
+    android:paddingTop="32dp"
+    android:gravity="center_horizontal"
+    android:layout_width="160dp"
+    android:layout_height="match_parent"/>

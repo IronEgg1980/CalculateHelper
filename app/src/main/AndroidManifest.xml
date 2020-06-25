@@ -32,7 +32,8 @@
             android:windowSoftInputMode="adjustPan" />
         <activity android:name=".views.ItemManageActivity" />
         <activity android:name=".views.PersonManageActivity" />
-        <activity android:name=".views.WorkMainActivity" />
+        <activity android:name=".views.WorkMainActivity"
+            android:windowSoftInputMode="adjustPan"/>
     </application>
 
 </manifest>
