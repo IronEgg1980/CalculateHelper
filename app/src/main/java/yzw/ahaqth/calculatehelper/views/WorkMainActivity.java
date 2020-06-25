@@ -32,7 +32,6 @@ import yzw.ahaqth.calculatehelper.views.dialogs.ToastFactory;
 
 public class WorkMainActivity extends AppCompatActivity {
     private String TAG = "殷宗旺";
-    private final int HISTORY_REQUESTCODE = 0x01;
     private List<RecordDetailsGroupByItem> dataList;
     private MyAdapter<RecordDetailsGroupByItem> adapter;
     private RecyclerView recyclerView;
