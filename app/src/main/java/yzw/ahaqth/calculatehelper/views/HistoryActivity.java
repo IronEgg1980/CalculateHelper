@@ -58,18 +58,22 @@ public class HistoryActivity extends AppCompatActivity {
 
                     }
                 });
-                myViewHolder.getView(R.id.swipe_menu_edit).setOnClickListener(new View.OnClickListener() {
+                myViewHolder.getView(R.id.swipe_menu_reassign).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        edit(data);
+                        reAssign(data);
+                    }
+                });
+                myViewHolder.getView(R.id.swipe_menu_input).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        input(data);
                     }
                 });
                 myViewHolder.getView(R.id.root).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent intent = new Intent(HistoryActivity.this, ShowRecordDetailsActivity.class);
-                        intent.putExtra("recordtime", data.getRecordTime().toEpochSecond(ZoneOffset.ofHours(8)));
-                        startActivity(intent);
+                        showDetails(data);
                     }
                 });
             }
@@ -97,8 +101,20 @@ public class HistoryActivity extends AppCompatActivity {
     }
 
 
-    private void edit(final Record record) {
+    private void reAssign(final Record record) {
+        Intent intent = new Intent(HistoryActivity.this, AssignActivity.class);
+        intent.putExtra("recordtime", record.getRecordTime().toEpochSecond(ZoneOffset.ofHours(8)));
+        startActivity(intent);
+    }
+
+    private void input(Record record) {
         Intent intent = new Intent(HistoryActivity.this, InputActivity.class);
+        intent.putExtra("recordtime", record.getRecordTime().toEpochSecond(ZoneOffset.ofHours(8)));
+        startActivity(intent);
+    }
+
+    private void showDetails(Record record) {
+        Intent intent = new Intent(HistoryActivity.this, ShowRecordDetailsActivity.class);
         intent.putExtra("recordtime", record.getRecordTime().toEpochSecond(ZoneOffset.ofHours(8)));
         startActivity(intent);
     }

@@ -50,9 +50,7 @@ public class ShowInputResultFragment extends Fragment {
                     @Override
                     public void onClick(View v) {
                         swipeMenuLayout.smoothClose();
-                        DbManager.deleAll(RecordDetails.class,
-                                "recordtime = ? and itemname = ?",
-                                String.valueOf(data.getRecordTime().toEpochSecond(ZoneOffset.ofHours(8))),data.getItemName());
+                        DbManager.deleInputRecord(data);
                         resultAdapter.notifyItemRemoved(myViewHolder.getAdapterPosition());
                         resultList.remove(data);
                     }

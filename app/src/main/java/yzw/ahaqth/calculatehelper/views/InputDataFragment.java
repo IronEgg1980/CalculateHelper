@@ -111,6 +111,7 @@ public class InputDataFragment extends Fragment {
                         reset();
                     case 0x10:
                         loadingDialog.dismiss();
+                        ToastFactory.showCenterToast(getContext(), "数据未保存");
                         break;
                 }
                 return true;
@@ -208,6 +209,7 @@ public class InputDataFragment extends Fragment {
     }
 
     private void save() {
+        final List<RecordDetails> list = new ArrayList<>();
         itemName = itemNameET.getText().toString();
         amount = Double.parseDouble(amountET.getText().toString());
         new Thread(new Runnable() {
@@ -245,14 +247,15 @@ public class InputDataFragment extends Fragment {
                         } else {
                             details.setAmount(BigDecimalHelper.add(entity.getAmount(), details.getAmount()));
                             details.setDataMode(DataMode.UNASSIGNED);
-                            details.update();
+                            list.add(details);
                         }
                     } else {
                         entity.setItemName(itemName);
                         entity.setDataMode(DataMode.UNASSIGNED);
+                        list.add(entity);
                     }
                 }
-                DbManager.saveInput(recordDetailsList);
+                DbManager.saveInput(list);
 
                 Message message = mHander.obtainMessage();
                 message.what = 0x02;

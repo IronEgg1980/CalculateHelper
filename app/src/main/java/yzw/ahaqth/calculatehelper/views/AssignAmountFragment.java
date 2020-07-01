@@ -53,12 +53,7 @@ public class AssignAmountFragment extends Fragment {
             activity.clickItemIndex = myViewHolder.getAdapterPosition();
             double value = data.getTotalAmount();
             long month = data.getMonth().toEpochDay();
-            AssignFragment assignFragment = AssignFragment.newInstance(value, month);
-            FragmentTransaction ft = activity.getSupportFragmentManager().beginTransaction();
-            ft.add(R.id.fragmentContainer, assignFragment, "assignFragment");
-            ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            ft.addToBackStack(null);
-            ft.commit();
+            activity.showAssignFragment(value,month);
         }
     }
 
@@ -115,8 +110,10 @@ public class AssignAmountFragment extends Fragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        onItemAssigned();
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if(!hidden){
+            onItemAssigned();
+        }
     }
 }

@@ -30,7 +30,7 @@ public class ShowRemain extends AppCompatActivity {
         setContentView(R.layout.activity_remain);
         initial();
         TextView textView = findViewById(R.id.titleTextView);
-        textView.setText("余额查询");
+        textView.setText("余额变动记录");
         findViewById(R.id.navagationIco).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -58,7 +58,8 @@ public class ShowRemain extends AppCompatActivity {
         adapter = new MyAdapter<RemainDetails>(remainList) {
             @Override
             public void bindData(MyViewHolder myViewHolder, RemainDetails data) {
-                myViewHolder.setText(R.id.monthTextView, data.getMonth().format(DateUtils.getYyyyM_Formatter()));
+                String text = data.getMonth().format(DateUtils.getYyyyM_Formatter()) + "（"+data.getVariableNote()+")";
+                myViewHolder.setText(R.id.monthTextView, text);
                 double amount = data.getVariableAmount();
                 TextView textView = myViewHolder.getView(R.id.amountTextView);
                 String amountString = amount > 0 ? "+" + amount : "-" + amount;

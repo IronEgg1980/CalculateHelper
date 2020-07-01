@@ -49,8 +49,9 @@ public class InputActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_input);
         recordTime = LocalDateTime.now();
-        if(savedInstanceState != null){
-            long time = savedInstanceState.getLong(BUNDLE_FLAG);
+        Bundle bundle = getIntent().getExtras();
+        if(bundle!=null){
+            long time = bundle.getLong("recordtime");
             this.recordTime = LocalDateTime.ofEpochSecond(time,0,ZoneOffset.ofHours(8));
         }
         initialTab();

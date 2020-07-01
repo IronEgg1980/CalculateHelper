@@ -7,6 +7,7 @@ public class RemainDetails extends BaseModul {
     private LocalDateTime recordTime;
     private LocalDate month;
     private double variableAmount;
+    private String variableNote;
 
     public LocalDateTime getRecordTime() {
         return recordTime;
@@ -30,5 +31,13 @@ public class RemainDetails extends BaseModul {
 
     public void setVariableAmount(double variableAmount) {
         this.variableAmount = variableAmount;
+    }
+
+    public String getVariableNote() {
+        return variableNote;
+    }
+
+    public void setVariableNote(String variableNote) {
+        this.variableNote = variableNote;
     }
 }

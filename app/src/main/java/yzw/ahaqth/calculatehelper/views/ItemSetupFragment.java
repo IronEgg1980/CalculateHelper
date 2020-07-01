@@ -103,6 +103,12 @@ public class ItemSetupFragment extends Fragment {
                     dialog.showError("请输入名称！");
                     return;
                 }
+
+                if(s.equals("***余额分配***")){
+                    dialog.showError("系统内部字段，请改名！");
+                    return;
+                }
+
                 if (DbManager.isExist(Item.class,"name = ?",s)) {
                     dialog.showError("已存在该项目，请改名！");
                     return;

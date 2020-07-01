@@ -13,6 +13,7 @@ public class AssignDetails extends BaseModul implements BrokenLineGraph.BrokenLi
     private String personName;
     private double offDays;
     private double assignAmount;
+    private String note;
 
     public LocalDateTime getRecordTime() {
         return recordTime;
@@ -52,6 +53,14 @@ public class AssignDetails extends BaseModul implements BrokenLineGraph.BrokenLi
 
     public void setOffDays(double offDays) {
         this.offDays = offDays;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 
     public double getAssignRatio(int maxDays){

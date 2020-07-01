@@ -74,6 +74,7 @@ public class AssignFragment extends Fragment {
                 remainDetails.setRecordTime(activity.getRecordTime());
                 remainDetails.setMonth(month);
                 remainDetails.setVariableAmount(getRemainValue());
+                remainDetails.setVariableNote("***分配结余***");
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
@@ -90,7 +91,8 @@ public class AssignFragment extends Fragment {
 
     private void onSaved() {
         activity.isAssigned = true;
-        activity.getSupportFragmentManager().popBackStack();
+        activity.closeAssignFragment();
+//        activity.getSupportFragmentManager().popBackStack();
     }
 
     private double getRemainValue() {
@@ -104,18 +106,14 @@ public class AssignFragment extends Fragment {
     private void atuoAssign() {
         double totalRatio = 0;
         for (Person p : mList) {
-            if (p.isSelected) {
-                totalRatio = BigDecimalHelper.add(totalRatio, p.assignRatio);
-            }
+            totalRatio = BigDecimalHelper.add(totalRatio, p.assignRatio);
             p.assignAmout = 0;
         }
 
         if (totalRatio != 0) {
             double per = BigDecimalHelper.divide(totalAmount, totalRatio);
             for (Person p : mList) {
-                if (p.isSelected) {
-                    p.assignAmout = BigDecimalHelper.multiplyOnFloor(per, p.assignRatio);
-                }
+                p.assignAmout = BigDecimalHelper.multiplyOnFloor(per, p.assignRatio);
             }
         }
     }
@@ -199,7 +197,8 @@ public class AssignFragment extends Fragment {
         view.findViewById(R.id.cancelView).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activity.getSupportFragmentManager().popBackStack();
+                activity.isAssigned = false;
+                activity.closeAssignFragment();
             }
         });
         view.findViewById(R.id.confirmView).setOnClickListener(new View.OnClickListener() {

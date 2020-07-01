@@ -3,6 +3,7 @@ package yzw.ahaqth.calculatehelper.views;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.menu.MenuBuilder;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Bundle;
@@ -23,9 +24,10 @@ import yzw.ahaqth.calculatehelper.R;
 public class AssignActivity extends AppCompatActivity {
     private final String TAG = "殷宗旺";
     private final String[] tabsText = {"金额分配", "余额分配", "查看结果"};
-    private final String POSITION_FLAG = "currentposition", TIME_FLAG = "recordtime",ITEMINDEX = "itemindex",ISASSIGNED = "isassigned";
+    private final String POSITION_FLAG = "currentposition", TIME_FLAG = "recordtime", ITEMINDEX = "itemindex", ISASSIGNED = "isassigned";
     private TabLayout tabLayout;
     private LocalDateTime recordTime;
+    private Fragment amountFragment;
 //    private int currentPosition = -1;
 
     public int clickItemIndex = -1;// 点击的项目位置
@@ -41,10 +43,11 @@ public class AssignActivity extends AppCompatActivity {
         setContentView(R.layout.activity_work_common);
         long l = getIntent().getLongExtra("recordtime", LocalDate.now().toEpochDay());
         recordTime = LocalDateTime.ofEpochSecond(l, 0, ZoneOffset.ofHours(8));
+        amountFragment = new AssignAmountFragment();
         initialTab();
         initialView();
 
-        Log.d(TAG, "onCreate: "+l);
+        Log.d(TAG, "onCreate: " + l);
     }
 
     @Override
@@ -60,8 +63,8 @@ public class AssignActivity extends AppCompatActivity {
     public void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putLong(TIME_FLAG, recordTime.toEpochSecond(ZoneOffset.ofHours(8)));
 //        outState.putInt(POSITION_FLAG, currentPosition);
-        outState.putInt(ITEMINDEX,clickItemIndex);
-        outState.putBoolean(ISASSIGNED,isAssigned);
+        outState.putInt(ITEMINDEX, clickItemIndex);
+        outState.putBoolean(ISASSIGNED, isAssigned);
         super.onSaveInstanceState(outState);
     }
 
@@ -75,6 +78,7 @@ public class AssignActivity extends AppCompatActivity {
     public void onBackPressed() {
         finish();
     }
+
 
     private void initialView() {
         TextView title = findViewById(R.id.titleTextView);
@@ -97,7 +101,7 @@ public class AssignActivity extends AppCompatActivity {
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                switch ( tab.getPosition()) {
+                switch (tab.getPosition()) {
                     case 0:
                         changeToTab1();
                         break;
@@ -124,10 +128,30 @@ public class AssignActivity extends AppCompatActivity {
 
     public void changeToTab1() {
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.fragmentContainer, new AssignAmountFragment());
-        fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-        fragmentTransaction.addToBackStack(null);
+
+        if (amountFragment.isAdded())
+            fragmentTransaction.show(amountFragment);
+        else {
+            fragmentTransaction.replace(R.id.fragmentContainer, amountFragment);
+            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            fragmentTransaction.addToBackStack(null);
+        }
         fragmentTransaction.commit();
+    }
+
+    public void showAssignFragment(double totalAmount, long month) {
+        AssignFragment assignFragment = AssignFragment.newInstance(totalAmount, month);
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.hide(amountFragment);
+        ft.add(R.id.fragmentContainer, assignFragment, "assignFragment");
+        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        ft.addToBackStack(null);
+        ft.commit();
+    }
+
+    public void closeAssignFragment() {
+        getSupportFragmentManager().popBackStack();
+        getSupportFragmentManager().beginTransaction().show(amountFragment).commit();
     }
 
     public void changeToTab2() {

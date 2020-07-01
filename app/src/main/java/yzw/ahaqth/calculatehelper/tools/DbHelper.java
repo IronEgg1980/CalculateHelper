@@ -1,5 +1,6 @@
 package yzw.ahaqth.calculatehelper.tools;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -22,24 +23,24 @@ import yzw.ahaqth.calculatehelper.views.interfaces.DataMode;
 
 public final class DbHelper extends SQLiteOpenHelper {
     private static final String dbName = "calculatehelper.db"; // 数据库名称
-    private static final int version = 1; // 数据库版本号
+    private static final int version = 3; // 数据库版本号
 
     private static DbHelper dbHelper = null;
 
-    public static void onDestory(){
+    public static void onDestory() {
         dbHelper.close();
         dbHelper = null;
     }
 
-    public static SQLiteDatabase getWriteDB(){
+    public static SQLiteDatabase getWriteDB() {
         return dbHelper.getWritableDatabase();
     }
 
-    public static SQLiteDatabase getReadDB(){
+    public static SQLiteDatabase getReadDB() {
         return dbHelper.getReadableDatabase();
     }
 
-    public static void initial(Context context){
+    public static void initial(Context context) {
         if (dbHelper == null)
             dbHelper = new DbHelper(context, dbName, null, version);
     }
@@ -60,7 +61,15 @@ public final class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        switch (oldVersion) {
+            case 1:
+                db.execSQL("ALTER TABLE remaindetails ADD variablenote TEXT default '***分配结余***'");
+                db.execSQL("ALTER TABLE assigndetails ADD note TEXT");
+            case 2:
+            case 3:
+        }
     }
+
 
     private String getCreateTableSql(Class clazz) {
         String name = clazz.getName();
