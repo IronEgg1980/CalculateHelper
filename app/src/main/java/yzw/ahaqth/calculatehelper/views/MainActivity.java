@@ -29,10 +29,10 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this,HistoryActivity.class));
             }
         });
-        findViewById(R.id.openRemainActivity).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.openInfoActivity).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this,ShowRemain.class));
+                startActivity(new Intent(MainActivity.this,Infomation.class));
             }
         });
         findViewById(R.id.openSetupActivity).setOnClickListener(new View.OnClickListener() {

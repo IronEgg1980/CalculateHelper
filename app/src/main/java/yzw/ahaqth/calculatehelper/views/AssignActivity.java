@@ -2,17 +2,11 @@ package yzw.ahaqth.calculatehelper.views;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Bundle;
-import android.os.PersistableBundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
 
-import com.google.android.material.tabs.TabItem;
 import com.google.android.material.tabs.TabLayout;
 
 import java.time.LocalDate;
@@ -27,7 +21,6 @@ public class AssignActivity extends AppCompatActivity {
     private final String POSITION_FLAG = "currentposition", TIME_FLAG = "recordtime", ITEMINDEX = "itemindex", ISASSIGNED = "isassigned";
     private TabLayout tabLayout;
     private LocalDateTime recordTime;
-    private Fragment amountFragment;
 //    private int currentPosition = -1;
 
     public int clickItemIndex = -1;// 点击的项目位置
@@ -40,14 +33,11 @@ public class AssignActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_work_common);
+        setContentView(R.layout.activity_assign);
         long l = getIntent().getLongExtra("recordtime", LocalDate.now().toEpochDay());
         recordTime = LocalDateTime.ofEpochSecond(l, 0, ZoneOffset.ofHours(8));
-        amountFragment = new AssignAmountFragment();
         initialTab();
-        initialView();
-
-        Log.d(TAG, "onCreate: " + l);
+        changeToTab1();
     }
 
     @Override
@@ -67,28 +57,16 @@ public class AssignActivity extends AppCompatActivity {
         outState.putBoolean(ISASSIGNED, isAssigned);
         super.onSaveInstanceState(outState);
     }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        changeToTab1();
-    }
+//
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//        changeToTab1();
+//    }
 
     @Override
     public void onBackPressed() {
         finish();
-    }
-
-
-    private void initialView() {
-        TextView title = findViewById(R.id.titleTextView);
-        title.setText("金额分配");
-        findViewById(R.id.navagationIco).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
     }
 
     private void initialTab() {
@@ -127,38 +105,30 @@ public class AssignActivity extends AppCompatActivity {
     }
 
     public void changeToTab1() {
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-
-        if (amountFragment.isAdded())
-            fragmentTransaction.show(amountFragment);
-        else {
-            fragmentTransaction.replace(R.id.fragmentContainer, amountFragment);
-            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            fragmentTransaction.addToBackStack(null);
-        }
-        fragmentTransaction.commit();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragmentContainer, new AssignAmountFragment())
+                .commit();
     }
 
     public void showAssignFragment(double totalAmount, long month) {
-        AssignFragment assignFragment = AssignFragment.newInstance(totalAmount, month);
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.hide(amountFragment);
-        ft.add(R.id.fragmentContainer, assignFragment, "assignFragment");
-        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-        ft.addToBackStack(null);
-        ft.commit();
-    }
-
-    public void closeAssignFragment() {
-        getSupportFragmentManager().popBackStack();
-        getSupportFragmentManager().beginTransaction().show(amountFragment).commit();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragmentContainer, AssignFragment.newInstance(totalAmount, month))
+                .commit();
     }
 
     public void changeToTab2() {
-
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragmentContainer, new AssignRemainFragment())
+                .commit();
     }
 
     public void changeToTab3() {
-
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragmentContainer, new ShowAssignResultFragment())
+                .commit();
     }
 }

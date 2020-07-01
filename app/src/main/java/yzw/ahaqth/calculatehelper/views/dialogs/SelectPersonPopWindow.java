@@ -29,11 +29,11 @@ public class SelectPersonPopWindow extends PopupWindow {
     private DialogCallback onCallBack;
     private Activity mActivity;
 
-    public SelectPersonPopWindow(Activity activity){
+    public SelectPersonPopWindow(Activity activity) {
         mActivity = activity;
         Point point = new Point();
         activity.getWindowManager().getDefaultDisplay().getRealSize(point);
-        setView(LayoutInflater.from(activity),new LinearLayout(activity));
+        setView(LayoutInflater.from(activity), new LinearLayout(activity));
         setWidth(ViewGroup.LayoutParams.MATCH_PARENT);
         setHeight((int) (point.y * 0.8));
         setOutsideTouchable(true);
@@ -42,8 +42,8 @@ public class SelectPersonPopWindow extends PopupWindow {
         setFocusable(true);
     }
 
-    public void show(){
-        showAtLocation(mActivity.getWindow().getDecorView(), Gravity.BOTTOM,0,50);
+    public void show() {
+        showAtLocation(mActivity.getWindow().getDecorView(), Gravity.BOTTOM, 0, 50);
     }
 
     public SelectPersonPopWindow setOnCallBack(DialogCallback onCallBack) {
@@ -51,36 +51,43 @@ public class SelectPersonPopWindow extends PopupWindow {
         return this;
     }
 
-    private void confirm(boolean isAll){
-        if(onCallBack== null)
+    private void confirm() {
+        if (onCallBack == null)
             return;
-        if(isAll){
-           onCallBack.onDismiss(true,mList.toArray());
-        }else{
-            List<Person> result = new ArrayList<>();
-            for(Person p : mList){
-                if (p.isSelected)
-                    result.add(p);
-            }
-            if(result.isEmpty())
-                onCallBack.onDismiss(false);
-            else
-                onCallBack.onDismiss(true,result.toArray());
+
+        List<Person> result = new ArrayList<>();
+        for (Person p : mList) {
+            if (p.isSelected)
+                result.add(p);
         }
+        if (result.isEmpty())
+            onCallBack.onDismiss(false);
+        else
+            onCallBack.onDismiss(true, result.toArray());
+    }
+
+    private void selectAll(){
+        for(Person p : mList)
+            p.isSelected = true;
+    }
+
+    private void selectReverse(){
+        for(Person p : mList)
+            p.isSelected = !p.isSelected;
     }
 
 
     public void setView(LayoutInflater inflater, final ViewGroup container) {
         mList = DbManager.findAll(Person.class);
 
-        View view = inflater.inflate(R.layout.dialog_select_person,container,false);
-        MyAdapter<Person> adapter = new MyAdapter<Person>(mList) {
+        View view = inflater.inflate(R.layout.dialog_select_person, container, false);
+        final MyAdapter<Person> adapter = new MyAdapter<Person>(mList) {
             @Override
             public void bindData(MyViewHolder myViewHolder, final Person data) {
                 final int index = myViewHolder.getAdapterPosition();
                 final boolean isSelected = data.isSelected;
                 myViewHolder.setText(R.id.item_person_name, data.getName());
-                myViewHolder.getView(R.id.selected_flag).setVisibility(isSelected?View.VISIBLE:View.GONE);
+                myViewHolder.getView(R.id.selected_flag).setVisibility(isSelected ? View.VISIBLE : View.GONE);
                 myViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -97,7 +104,7 @@ public class SelectPersonPopWindow extends PopupWindow {
         };
 
         RecyclerView recyclerView = view.findViewById(R.id.recyclerview);
-        recyclerView.setLayoutManager(new GridLayoutManager(mActivity,2));
+        recyclerView.setLayoutManager(new GridLayoutManager(mActivity, 2));
         recyclerView.setAdapter(adapter);
         view.findViewById(R.id.close_view).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,14 +116,21 @@ public class SelectPersonPopWindow extends PopupWindow {
             @Override
             public void onClick(View v) {
                 dismiss();
-                confirm(false);
+                confirm();
             }
         });
         view.findViewById(R.id.select_all_view).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dismiss();
-                confirm(true);
+               selectAll();
+               adapter.notifyDataSetChanged();
+            }
+        });
+        view.findViewById(R.id.select_reverse_view).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                selectReverse();
+                adapter.notifyDataSetChanged();
             }
         });
         setContentView(view);

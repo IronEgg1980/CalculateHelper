@@ -63,10 +63,6 @@ public class AssignDetails extends BaseModul implements BrokenLineGraph.BrokenLi
         this.note = note;
     }
 
-    public double getAssignRatio(int maxDays){
-        return BigDecimalHelper.divide(BigDecimalHelper.minus(maxDays,this.offDays),maxDays,2);
-    }
-
     @Override
     public String getLabel() {
         return month.format(DateUtils.getYyM_Formatter());

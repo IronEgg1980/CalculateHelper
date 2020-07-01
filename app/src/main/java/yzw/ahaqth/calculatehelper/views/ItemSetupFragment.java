@@ -104,7 +104,7 @@ public class ItemSetupFragment extends Fragment {
                     return;
                 }
 
-                if(s.equals("***余额分配***")){
+                if(s.equals("***余额分配***") || s.equals("***分配结余***")||s.equals("***余额调整***")){
                     dialog.showError("系统内部字段，请改名！");
                     return;
                 }

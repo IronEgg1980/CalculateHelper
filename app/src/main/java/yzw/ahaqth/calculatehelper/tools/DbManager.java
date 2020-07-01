@@ -5,7 +5,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.strictmode.SqliteObjectLeakedViolation;
+import android.text.TextUtils;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -340,7 +343,76 @@ public abstract class DbManager {
         return result;
     }
 
-    public static boolean saveAssignData(List<AssignDetails> list, RemainDetails remainDetails) {
+    public static boolean clearRemainAssign(List<AssignDetails> list) {
+        if (list.isEmpty())
+            return false;
+        boolean b = false;
+        Remain remain = findFirst(Remain.class);
+
+        double d = 0;
+        for (AssignDetails assignDetails : list) {
+            d = BigDecimalHelper.add(d, assignDetails.getAssignAmount());
+        }
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("amount", BigDecimalHelper.add(remain.getAmount(), d));
+
+        LocalDateTime recordTime = list.get(0).getRecordTime();
+        String[] args = {String.valueOf(recordTime.toEpochSecond(ZoneOffset.ofHours(8))), "***余额分配***"};
+
+        SQLiteDatabase sqLiteDatabase = DbHelper.getWriteDB();
+        sqLiteDatabase.beginTransaction();
+        try {
+            sqLiteDatabase.delete(AssignDetails.class.getSimpleName().toLowerCase(), "recordtime = ? and note = ?", args);
+            sqLiteDatabase.delete(RemainDetails.class.getSimpleName().toLowerCase(), "recordtime = ? and variablenote = ?", args);
+            sqLiteDatabase.update(Remain.class.getSimpleName().toLowerCase(), contentValues, null, null);
+            sqLiteDatabase.setTransactionSuccessful();
+            b = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            sqLiteDatabase.endTransaction();
+        }
+        return b;
+    }
+
+    public static boolean saveAssignRemainData(List<AssignDetails> list, @NonNull RemainDetails remainDetails) {
+        boolean result;
+        Remain remain = findFirst(Remain.class);
+
+        SQLiteDatabase sqLiteDatabase = DbHelper.getWriteDB();
+        sqLiteDatabase.beginTransaction();
+        try {
+            for (AssignDetails assignDetails : list) {
+                ContentValues contentValues = DbManager.modul2ContentValues(assignDetails);
+                if (contentValues != null) {
+                    sqLiteDatabase.insert(AssignDetails.class.getSimpleName().toLowerCase(), null, contentValues);
+                }
+            }
+            ContentValues contentValues = new ContentValues();
+            if (remain == null) {
+                contentValues.put("amount", remainDetails.getVariableAmount());
+                sqLiteDatabase.insert(Remain.class.getSimpleName().toLowerCase(), null, contentValues);
+            } else {
+                contentValues.put("amount", BigDecimalHelper.add(remain.getAmount(), remainDetails.getVariableAmount()));
+                sqLiteDatabase.update(Remain.class.getSimpleName().toLowerCase(), contentValues, null, null);
+            }
+
+            ContentValues contentValues1 = DbManager.modul2ContentValues(remainDetails);
+            sqLiteDatabase.insert(RemainDetails.class.getSimpleName().toLowerCase(), null, contentValues1);
+
+            sqLiteDatabase.setTransactionSuccessful();
+            result = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = false;
+        } finally {
+            sqLiteDatabase.endTransaction();
+        }
+        return result;
+    }
+
+    public static boolean saveAssignData(List<AssignDetails> list, @NonNull RemainDetails remainDetails) {
         boolean result;
         Remain remain = findFirst(Remain.class);
 
@@ -351,19 +423,16 @@ public abstract class DbManager {
         sqLiteDatabase.beginTransaction();
         try {
             for (AssignDetails assignDetails : list) {
-                Log.d(TAG, "saveAssignData: 1");
                 ContentValues contentValues = DbManager.modul2ContentValues(assignDetails);
-                Log.d(TAG, "saveAssignData: 2");
                 if (contentValues != null) {
                     sqLiteDatabase.insert(AssignDetails.class.getSimpleName().toLowerCase(), null, contentValues);
                 }
             }
+            ContentValues contentValues = new ContentValues();
             if (remain == null) {
-                ContentValues contentValues = new ContentValues();
                 contentValues.put("amount", remainDetails.getVariableAmount());
                 sqLiteDatabase.insert(Remain.class.getSimpleName().toLowerCase(), null, contentValues);
             } else {
-                ContentValues contentValues = new ContentValues();
                 contentValues.put("amount", BigDecimalHelper.add(remain.getAmount(), remainDetails.getVariableAmount()));
                 sqLiteDatabase.update(Remain.class.getSimpleName().toLowerCase(), contentValues, null, null);
             }
@@ -704,8 +773,12 @@ public abstract class DbManager {
                 personName = assignDetails.getPersonName();
                 amount = BigDecimalHelper.add(amount, assignDetails.getAssignAmount());
                 monthList.append("、")
-                        .append(assignDetails.getMonth().format(DateUtils.getYyyyM_Formatter()))
-                        .append("（")
+                        .append(assignDetails.getMonth().format(DateUtils.getYyyyM_Formatter()));
+
+                if(!TextUtils.isEmpty(assignDetails.getNote()))
+                    monthList.append(assignDetails.getNote());
+
+                monthList.append("（")
                         .append(assignDetails.getAssignAmount())
                         .append("）");
                 if (BigDecimalHelper.compare(assignDetails.getOffDays(), 0) > 0) {

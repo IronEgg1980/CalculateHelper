@@ -123,14 +123,6 @@ public class InputActivity extends AppCompatActivity {
 
     private void initialView(){
         inputDataFragment = new InputDataFragment();
-        TextView titleView = findViewById(R.id.titleTextView);
-        titleView.setText("输入数据");
-        findViewById(R.id.navagationIco).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
         findViewById(R.id.nextButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

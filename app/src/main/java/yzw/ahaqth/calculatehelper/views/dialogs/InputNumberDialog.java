@@ -30,7 +30,7 @@ import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 public class InputNumberDialog extends DialogFragment {
     private double maxValue;
     private double currentValue;
-    private String title;
+    private String title,message1,message2;
     private DialogCallback onDismiss;
     private boolean confirmFlag = false;
     private double resultValue = 0;
@@ -44,22 +44,24 @@ public class InputNumberDialog extends DialogFragment {
         this.onDismiss = onDismiss;
     }
 
-    public static InputNumberDialog getInstance(double maxValue, double value, String title) {
+    public static InputNumberDialog getInstance(double maxValue, double value, String title,String message1,String message2) {
         InputNumberDialog dialog = new InputNumberDialog();
         Bundle bundle = new Bundle();
         bundle.putDouble("maxvalue", maxValue);
         bundle.putString("title", title);
         bundle.putDouble("value", value);
+        bundle.putString("message1", message1);
+        bundle.putString("message2", message2);
         dialog.setArguments(bundle);
         return dialog;
     }
 
     public static InputNumberDialog getInstance(double maxValue) {
-        return getInstance(maxValue, 0, "输入金额");
+        return getInstance(maxValue, 0, "输入金额","最大可分配金额：","未分配金额：");
     }
 
     public static InputNumberDialog getInstance(double maxValue, double value) {
-        return getInstance(maxValue, value, "输入金额");
+        return getInstance(maxValue, value, "输入金额","最大可分配金额：","未分配金额：");
     }
 
     private InputNumberDialog() {
@@ -74,6 +76,8 @@ public class InputNumberDialog extends DialogFragment {
             maxValue = bundle.getDouble("maxvalue");
             title = bundle.getString("title");
             currentValue = bundle.getDouble("value");
+            message1 = bundle.getString("message1");
+            message2 = bundle.getString("message2");
         }
         currentValue = currentValue >0?currentValue:0;
     }
@@ -85,7 +89,7 @@ public class InputNumberDialog extends DialogFragment {
         titleTextView = view.findViewById(R.id.titleTextView);
         titleTextView.setText(title);
         maxAmountTextView = view.findViewById(R.id.maxAmountTextView);
-        String s = "总金额：" + maxValue + "\n未分配金额：" + currentValue;
+        String s = message1 + maxValue +"\n"+ message2 + currentValue;
         maxAmountTextView.setText(s);
         view.findViewById(R.id.inputAllTextView).setOnClickListener(new View.OnClickListener() {
             @Override

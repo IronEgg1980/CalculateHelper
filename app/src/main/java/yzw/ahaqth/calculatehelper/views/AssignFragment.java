@@ -15,6 +15,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjuster;
+import java.time.temporal.TemporalAdjusters;
+import java.time.temporal.TemporalField;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +30,7 @@ import yzw.ahaqth.calculatehelper.tools.BigDecimalHelper;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
 import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
 import yzw.ahaqth.calculatehelper.views.adapters.MyDivideItemDecoration;
+import yzw.ahaqth.calculatehelper.views.dialogs.InputNumberDialog;
 import yzw.ahaqth.calculatehelper.views.dialogs.LoadingDialog;
 import yzw.ahaqth.calculatehelper.views.dialogs.SelectPersonPopWindow;
 import yzw.ahaqth.calculatehelper.views.dialogs.ToastFactory;
@@ -56,6 +60,10 @@ public class AssignFragment extends Fragment {
 
 
     private void saveResult() {
+        if(mList.isEmpty()){
+            ToastFactory.showCenterToast(getContext(),"请先选择人员完成分配，再保存数据");
+            return;
+        }
         loadingDialog.show(activity.getSupportFragmentManager(), "saveLoading");
         new Thread(new Runnable() {
             @Override
@@ -91,8 +99,7 @@ public class AssignFragment extends Fragment {
 
     private void onSaved() {
         activity.isAssigned = true;
-        activity.closeAssignFragment();
-//        activity.getSupportFragmentManager().popBackStack();
+        activity.changeToTab1();
     }
 
     private double getRemainValue() {
@@ -123,6 +130,24 @@ public class AssignFragment extends Fragment {
         personSelectTextView.setText(text);
     }
 
+    private void inputOffDays(final Person data){
+        final int maxDay = month.with(TemporalAdjusters.lastDayOfMonth()).getDayOfMonth();
+        InputNumberDialog inputNumberDialog = InputNumberDialog.getInstance(maxDay,data.offDays,"请输入请假天数","本月最大天数：","请假天数：");
+        inputNumberDialog.setOnDismiss(new DialogCallback() {
+            @Override
+            public void onDismiss(boolean confirmFlag, Object... values) {
+                double value = (double) values[0];
+                if(confirmFlag){
+                    data.offDays = value;
+                    data.assignRatio = BigDecimalHelper.divide(BigDecimalHelper.minus(maxDay,value),maxDay,2);
+                    atuoAssign();
+                    adapter.notifyDataSetChanged();
+                }
+            }
+        });
+        inputNumberDialog.show(activity.getSupportFragmentManager(),"inputOffdays");
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -135,7 +160,7 @@ public class AssignFragment extends Fragment {
         mList = new ArrayList<>();
         adapter = new MyAdapter<Person>(mList) {
             @Override
-            public void bindData(MyViewHolder myViewHolder, Person data) {
+            public void bindData(final MyViewHolder myViewHolder, final Person data) {
                 myViewHolder.setText(R.id.nameTextView, data.getName());
                 myViewHolder.setText(R.id.assignAmountTextView, "当前分配：" + data.assignAmout);
                 myViewHolder.setText(R.id.offDays, "请假：" + data.offDays);
@@ -143,7 +168,7 @@ public class AssignFragment extends Fragment {
                 myViewHolder.getView(R.id.offDays).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
+                        inputOffDays(data);
                     }
                 });
             }
@@ -198,7 +223,7 @@ public class AssignFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 activity.isAssigned = false;
-                activity.closeAssignFragment();
+                activity.changeToTab1();
             }
         });
         view.findViewById(R.id.confirmView).setOnClickListener(new View.OnClickListener() {
