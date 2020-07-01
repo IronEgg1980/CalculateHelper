@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import yzw.ahaqth.calculatehelper.R;
-import yzw.ahaqth.calculatehelper.views.MyDivideItemDecoration;
+import yzw.ahaqth.calculatehelper.views.adapters.MyDivideItemDecoration;
 import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
@@ -33,7 +33,7 @@ public class SelectListPopWindow extends PopupWindow {
         this.list = list;
         this.mActivity = activity;
         initialView();
-        setSize();
+        setSize(mActivity.getWindow().getDecorView());
         setOutsideTouchable(true);
         setTouchable(true);
         setFocusable(true);
@@ -58,10 +58,10 @@ public class SelectListPopWindow extends PopupWindow {
 
             @Override
             public int getLayoutId(int position) {
-                return R.layout.dropdown_list_item;
+                return R.layout.item_dropdown_list;
             }
         };
-        View view = LayoutInflater.from(mActivity).inflate(R.layout.dropdown_popwindow,null);
+        View view = LayoutInflater.from(mActivity).inflate(R.layout.popwindow_dropdown_layout,null);
         RecyclerView recyclerView = view.findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(mActivity));
         recyclerView.addItemDecoration(new MyDivideItemDecoration());
@@ -69,11 +69,14 @@ public class SelectListPopWindow extends PopupWindow {
         setContentView(view);
     }
 
-    private void setSize() {
-        int sreenWidth = mActivity.getWindow().getDecorView().getWidth();
-        int sreenHeight = mActivity.getWindow().getDecorView().getHeight();
-        setWidth(sreenWidth * 4 / 5);
-        setHeight(sreenHeight / 2);
+    private SelectListPopWindow setSize(View anchor) {
+//        int sreenWidth = mActivity.getWindow().getDecorView().getWidth();
+//        int sreenHeight = mActivity.getWindow().getDecorView().getHeight();
+//        setWidth(sreenWidth * 4 / 5);
+//        setHeight(sreenHeight / 2);
+        setWidth(anchor.getWidth());
+        setHeight(1000);
+        return this;
     }
 
     public void show(){

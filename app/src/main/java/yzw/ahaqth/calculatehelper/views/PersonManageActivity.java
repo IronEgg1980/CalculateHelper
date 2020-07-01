@@ -31,7 +31,7 @@ public class PersonManageActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.recyclerview_layout);
+        setContentView(R.layout.single_recyclerview_layout);
         TextView titleTextView = findViewById(R.id.titleTextView);
         titleTextView.setText("人员管理");
         findViewById(R.id.navagationIco).setOnClickListener(new View.OnClickListener() {

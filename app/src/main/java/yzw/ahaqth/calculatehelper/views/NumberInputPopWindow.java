@@ -63,7 +63,7 @@ public class NumberInputPopWindow extends PopupWindow {
     }
 
     public void createView(){
-        View view = LayoutInflater.from(mActivity).inflate(R.layout.number_input_layout,new FrameLayout(mActivity),false);
+        View view = LayoutInflater.from(mActivity).inflate(R.layout.dialog_number_input,new FrameLayout(mActivity),false);
         tipsTextview = view.findViewById(R.id.tips_textview);
         tipsTextview.setText("");
         num1 = view.findViewById(R.id.num1);

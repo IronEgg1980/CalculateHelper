@@ -13,7 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethod;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -76,21 +75,22 @@ public class InputNumberDialog extends DialogFragment {
             title = bundle.getString("title");
             currentValue = bundle.getDouble("value");
         }
+        currentValue = currentValue >0?currentValue:0;
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.input_number_dialog, container, false);
+        View view = inflater.inflate(R.layout.dialog_input_number, container, false);
         titleTextView = view.findViewById(R.id.titleTextView);
         titleTextView.setText(title);
         maxAmountTextView = view.findViewById(R.id.maxAmountTextView);
-        String s = "当前可分配最大金额：" + maxValue;
+        String s = "总金额：" + maxValue + "\n未分配金额：" + currentValue;
         maxAmountTextView.setText(s);
         view.findViewById(R.id.inputAllTextView).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                numberEdittext.setText(String.valueOf(maxValue));
+                numberEdittext.setText(String.valueOf(currentValue));
             }
         });
         numberEdittext = view.findViewById(R.id.number_edittext);
@@ -151,11 +151,15 @@ public class InputNumberDialog extends DialogFragment {
             return;
         }
         resultValue = Double.parseDouble(numberEdittext.getText().toString().trim());
+        if(resultValue <0){
+            numberEdittext.setError("金额不能为负数");
+            return;
+        }
         if (BigDecimalHelper.minus(maxValue, resultValue) < 0) {
             numberEdittext.setError("输入超出范围");
             return;
         }
-        confirmFlag = resultValue > 0;
+        confirmFlag = resultValue >= 0;
         dismiss();
     }
 }

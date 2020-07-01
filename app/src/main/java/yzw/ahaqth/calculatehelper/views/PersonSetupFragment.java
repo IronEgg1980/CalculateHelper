@@ -4,7 +4,6 @@ import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.text.TextUtils;
@@ -12,7 +11,6 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.mcxtzhang.swipemenulib.SwipeMenuLayout;
 
@@ -89,7 +87,7 @@ public class PersonSetupFragment extends Fragment {
                 return 1;
             }
         });
-        View view = inflater.inflate(R.layout.recyclerview_layout,container,false);
+        View view = inflater.inflate(R.layout.single_recyclerview_layout,container,false);
         recyclerView = view.findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);

@@ -11,7 +11,6 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.mcxtzhang.swipemenulib.SwipeMenuLayout;
 
@@ -22,6 +21,7 @@ import yzw.ahaqth.calculatehelper.R;
 import yzw.ahaqth.calculatehelper.moduls.Item;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
 import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
+import yzw.ahaqth.calculatehelper.views.adapters.MyDivideItemDecoration;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
 import yzw.ahaqth.calculatehelper.views.dialogs.SingleEditTextDialog;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
@@ -85,7 +85,7 @@ public class ItemSetupFragment extends Fragment {
                 return R.layout.item_item;
             }
         };
-        View view = inflater.inflate(R.layout.recyclerview_layout,container,false);
+        View view = inflater.inflate(R.layout.single_recyclerview_layout,container,false);
         recyclerView = view.findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.addItemDecoration(new MyDivideItemDecoration());

@@ -20,6 +20,7 @@ import yzw.ahaqth.calculatehelper.moduls.AssignGroupByPerson;
 import yzw.ahaqth.calculatehelper.moduls.RecordDetailsGroupByItem;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
 import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
+import yzw.ahaqth.calculatehelper.views.adapters.MyDivideItemDecoration;
 
 public class ShowRecordDetailsActivity extends AppCompatActivity {
     private LocalDateTime recordTime;
@@ -46,7 +47,7 @@ public class ShowRecordDetailsActivity extends AppCompatActivity {
         recordGroupByItemAdapter = new MyAdapter<RecordDetailsGroupByItem>(list) {
             @Override
             public int getLayoutId(int position) {
-                return R.layout.recordgroupbyitem_item_layout;
+                return R.layout.item_record_groupbyitem;
             }
 
             @Override
@@ -63,7 +64,7 @@ public class ShowRecordDetailsActivity extends AppCompatActivity {
         assignAdapter = new MyAdapter<AssignGroupByPerson>(list2) {
             @Override
             public int getLayoutId(int position) {
-                return R.layout.assign_recorddetailslist_item;
+                return R.layout.item_assign_record_details;
             }
 
             @Override

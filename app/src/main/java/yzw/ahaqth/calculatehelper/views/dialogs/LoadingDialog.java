@@ -44,7 +44,7 @@ public class LoadingDialog extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.loading_dialog,container,false);
+        View view = inflater.inflate(R.layout.dialog_loading,container,false);
         textView = view.findViewById(R.id.infoTextView);
         textView.setText(message);
         return view;

@@ -1,50 +1,25 @@
 package yzw.ahaqth.calculatehelper.views;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import yzw.ahaqth.calculatehelper.R;
-import yzw.ahaqth.calculatehelper.moduls.BackupEntity;
 import yzw.ahaqth.calculatehelper.moduls.Record;
 import yzw.ahaqth.calculatehelper.tools.DateUtils;
-import yzw.ahaqth.calculatehelper.tools.DbHelper;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
 import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
-import yzw.ahaqth.calculatehelper.views.dialogs.LoadingDialog;
-import yzw.ahaqth.calculatehelper.views.dialogs.SelectListPopWindow;
-import yzw.ahaqth.calculatehelper.views.dialogs.ToastFactory;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
 
-import android.Manifest;
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
-import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.TextView;
 
-import com.alibaba.fastjson.JSON;
 import com.mcxtzhang.swipemenulib.SwipeMenuLayout;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
@@ -101,7 +76,7 @@ public class HistoryActivity extends AppCompatActivity {
 
             @Override
             public int getLayoutId(int position) {
-                return R.layout.record_item_layout;
+                return R.layout.item_record;
             }
         };
     }
@@ -123,7 +98,7 @@ public class HistoryActivity extends AppCompatActivity {
 
 
     private void edit(final Record record) {
-        Intent intent = new Intent(HistoryActivity.this, WorkMainActivity.class);
+        Intent intent = new Intent(HistoryActivity.this, InputActivity.class);
         intent.putExtra("recordtime", record.getRecordTime().toEpochSecond(ZoneOffset.ofHours(8)));
         startActivity(intent);
     }

@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import yzw.ahaqth.calculatehelper.R;
-import yzw.ahaqth.calculatehelper.views.MyDivideItemDecoration;
+import yzw.ahaqth.calculatehelper.views.adapters.MyDivideItemDecoration;
 import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
 
 public class DropDownList<T> extends PopupWindow {
@@ -38,7 +38,7 @@ public class DropDownList<T> extends PopupWindow {
 
             @Override
             public int getLayoutId(int position) {
-                return R.layout.dropdown_list_item;
+                return R.layout.item_dropdown_list;
             }
         };
         initialView();
@@ -47,7 +47,7 @@ public class DropDownList<T> extends PopupWindow {
     }
 
     private void initialView(){
-        View view = LayoutInflater.from(anchorView.getContext()).inflate(R.layout.dropdown_popwindow,null);
+        View view = LayoutInflater.from(anchorView.getContext()).inflate(R.layout.popwindow_dropdown_layout,null);
         RecyclerView recyclerView = view.findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(anchorView.getContext()));
         recyclerView.addItemDecoration(new MyDivideItemDecoration());
@@ -56,7 +56,7 @@ public class DropDownList<T> extends PopupWindow {
     }
     public void show(){
         setWidth(anchorView.getWidth());
-        setHeight(640);
-        showAsDropDown(anchorView,-40,-40);
+        setHeight(1000);
+        showAsDropDown(anchorView,0,-30);
     }
 }

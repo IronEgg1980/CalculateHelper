@@ -1,4 +1,4 @@
-package yzw.ahaqth.calculatehelper.views;
+package yzw.ahaqth.calculatehelper.views.adapters;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -25,7 +25,7 @@ public class MyDivideItemDecoration extends RecyclerView.ItemDecoration {
 
     @Override
     public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
-        if (parent.getChildAdapterPosition(view) != parent.getAdapter().getItemCount() - 1) {
+        if (parent.getChildAdapterPosition(view) != state.getItemCount() - 1) {
             outRect.bottom = dividerSize;
         } else {
             outRect.bottom = 0;
@@ -35,11 +35,11 @@ public class MyDivideItemDecoration extends RecyclerView.ItemDecoration {
     @Override
     public void onDraw(@NonNull Canvas c, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
         if (parent.getLayoutManager() != null) {
-            this.drawVertical(c, parent);
+            this.drawVertical(c, parent,state);
         }
     }
 
-    private void drawVertical(Canvas canvas, RecyclerView parent) {
+    private void drawVertical(Canvas canvas, RecyclerView parent,RecyclerView.State state) {
         canvas.save();
         int left;
         int right;
@@ -56,7 +56,7 @@ public class MyDivideItemDecoration extends RecyclerView.ItemDecoration {
 
         for(int i = 0; i < childCount; ++i) {
             View child = parent.getChildAt(i);
-            if(parent.getChildAdapterPosition(child) != parent.getAdapter().getItemCount() - 1) {
+            if(parent.getChildAdapterPosition(child) != state.getItemCount() - 1) {
                 parent.getDecoratedBoundsWithMargins(child, this.mBounds);
                 int bottom = this.mBounds.bottom + Math.round(child.getTranslationY());
                 int center = bottom - dividerSize / 2;

@@ -72,7 +72,7 @@ public class Infomation extends AppCompatActivity {
         recordAdapter = new MyAdapter<RecordDetailsGroupByItem>(recordDetailsList) {
             @Override
             public int getLayoutId(int position) {
-                return R.layout.infomation_record_item;
+                return R.layout.item_info_record;
             }
 
             @Override
@@ -96,7 +96,7 @@ public class Infomation extends AppCompatActivity {
         assignAdapter = new MyAdapter<AssignGroupByPerson>(assignList) {
             @Override
             public int getLayoutId(int position) {
-                return R.layout.info_details_item;
+                return R.layout.item_info_details;
             }
 
             @Override
@@ -184,7 +184,7 @@ public class Infomation extends AppCompatActivity {
 //            max = Math.max(max,details.getAmount());
 //        }
 //        final double finalMax = max;
-//        BaseAdapter<RecordDetails> adapter = new BaseAdapter<RecordDetails>(R.layout.info_details_item,list) {
+//        BaseAdapter<RecordDetails> adapter = new BaseAdapter<RecordDetails>(R.layout.item_info_details,list) {
 //            @Override
 //            public void bindData(BaseViewHolder baseViewHolder, RecordDetails data) {
 //                baseViewHolder.setText(R.id.monthTextView,data.getMonth().format(DateUtils.getYyyyM_Formatter()));
@@ -220,7 +220,7 @@ public class Infomation extends AppCompatActivity {
 //            max = Math.max(max,details.getAssignAmount());
 //        }
 //        final double finalMax = max;
-//        BaseAdapter<AssignDetails> adapter = new BaseAdapter<AssignDetails>(R.layout.info_details_item,list) {
+//        BaseAdapter<AssignDetails> adapter = new BaseAdapter<AssignDetails>(R.layout.item_info_details,list) {
 //            @Override
 //            public void bindData(BaseViewHolder baseViewHolder, AssignDetails data) {
 //                baseViewHolder.setText(R.id.monthTextView,data.getMonth().format(DateUtils.getYyyyM_Formatter()));

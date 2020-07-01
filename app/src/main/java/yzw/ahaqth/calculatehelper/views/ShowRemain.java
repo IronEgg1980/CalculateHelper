@@ -68,7 +68,7 @@ public class ShowRemain extends AppCompatActivity {
 
             @Override
             public int getLayoutId(int position) {
-                return R.layout.remaindetails_item;
+                return R.layout.item_remaindetails;
             }
         };
     }

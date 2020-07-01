@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.openInputActivity).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this,WorkMainActivity.class));
+                startActivity(new Intent(MainActivity.this, InputActivity.class));
             }
         });
         findViewById(R.id.openHistoryActivity).setOnClickListener(new View.OnClickListener() {

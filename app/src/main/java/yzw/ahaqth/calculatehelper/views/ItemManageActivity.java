@@ -19,6 +19,7 @@ import yzw.ahaqth.calculatehelper.R;
 import yzw.ahaqth.calculatehelper.moduls.Item;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
 import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
+import yzw.ahaqth.calculatehelper.views.adapters.MyDivideItemDecoration;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
 import yzw.ahaqth.calculatehelper.views.dialogs.SingleEditTextDialog;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
@@ -30,7 +31,7 @@ public class ItemManageActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.recyclerview_layout);
+        setContentView(R.layout.single_recyclerview_layout);
         TextView titleTextView = findViewById(R.id.titleTextView);
         titleTextView.setText("记录项目管理");
         findViewById(R.id.navagationIco).setOnClickListener(new View.OnClickListener() {

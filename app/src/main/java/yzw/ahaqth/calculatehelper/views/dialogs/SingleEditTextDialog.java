@@ -8,13 +8,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethod;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.PopupWindow;
 import android.widget.TextView;
-
-import com.rengwuxian.materialedittext.MaterialEditText;
 
 import yzw.ahaqth.calculatehelper.R;
 import yzw.ahaqth.calculatehelper.views.interfaces.DialogCallback;
@@ -76,7 +73,7 @@ public class SingleEditTextDialog extends PopupWindow {
 
     private void generateView(Context context) {
         @SuppressLint("InflateParams")
-        View view = LayoutInflater.from(context).inflate(R.layout.input_single_edittext, null);
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_input_single_edittext, null);
         titleTextView = view.findViewById(R.id.titleTextView);
         editText = view.findViewById(R.id.edittext);
         view.findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
