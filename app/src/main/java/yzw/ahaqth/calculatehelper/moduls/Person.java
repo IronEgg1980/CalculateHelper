@@ -10,6 +10,7 @@ public class Person extends BaseModul{
     public boolean isSelected = false;
     public double assignAmout = 0;
     public double offDays = 0;
+    public double extraAmount = 0;
 
     public String getName() {
         return name;

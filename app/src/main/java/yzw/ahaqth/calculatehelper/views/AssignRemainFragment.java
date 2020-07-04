@@ -29,6 +29,7 @@ import yzw.ahaqth.calculatehelper.moduls.RemainDetails;
 import yzw.ahaqth.calculatehelper.tools.BigDecimalHelper;
 import yzw.ahaqth.calculatehelper.tools.DbManager;
 import yzw.ahaqth.calculatehelper.views.adapters.MyAdapter;
+import yzw.ahaqth.calculatehelper.views.adapters.MyDivideItemDecoration;
 import yzw.ahaqth.calculatehelper.views.dialogs.DialogFactory;
 import yzw.ahaqth.calculatehelper.views.dialogs.InputNumberDialog;
 import yzw.ahaqth.calculatehelper.views.dialogs.LoadingDialog;
@@ -98,6 +99,7 @@ public class AssignRemainFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
+        recyclerView.addItemDecoration(new MyDivideItemDecoration());
         totalAmountTextView = view.findViewById(R.id.totalAmountTextView);
         totalAmountTextView.setOnClickListener(new View.OnClickListener() {
             @Override

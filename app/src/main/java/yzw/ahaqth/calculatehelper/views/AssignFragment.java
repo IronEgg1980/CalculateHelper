@@ -74,8 +74,9 @@ public class AssignFragment extends Fragment {
                     assignDetails.setRecordTime(activity.getRecordTime());
                     assignDetails.setMonth(month);
                     assignDetails.setPersonName(person.getName());
-                    assignDetails.setAssignAmount(person.assignAmout);
+                    assignDetails.setAssignAmount(BigDecimalHelper.add(person.assignAmout,person.extraAmount));
                     assignDetails.setOffDays(person.offDays);
+                    assignDetails.setNote(person.extraAmount >0?"额外："+person.extraAmount:"");
                     list.add(assignDetails);
                 }
                 RemainDetails remainDetails = new RemainDetails();
@@ -106,6 +107,7 @@ public class AssignFragment extends Fragment {
         double remainValue = totalAmount;
         for (Person p : mList) {
             remainValue = BigDecimalHelper.minus(remainValue, p.assignAmout);
+            remainValue = BigDecimalHelper.minus(remainValue,p.extraAmount);
         }
         return remainValue;
     }
@@ -117,8 +119,10 @@ public class AssignFragment extends Fragment {
             p.assignAmout = 0;
         }
 
+        double amount = getRemainValue();
+
         if (totalRatio != 0) {
-            double per = BigDecimalHelper.divide(totalAmount, totalRatio);
+            double per = BigDecimalHelper.divide(amount, totalRatio,4);
             for (Person p : mList) {
                 p.assignAmout = BigDecimalHelper.multiplyOnFloor(per, p.assignRatio);
             }
@@ -148,6 +152,21 @@ public class AssignFragment extends Fragment {
         inputNumberDialog.show(activity.getSupportFragmentManager(),"inputOffdays");
     }
 
+    private void inputExtraAmount(final Person person){
+        InputNumberDialog dialog = InputNumberDialog.getInstance(totalAmount,person.extraAmount,"额外金额","总金额：","已分配金额：");
+        dialog.setOnDismiss(new DialogCallback() {
+            @Override
+            public void onDismiss(boolean confirmFlag, Object... values) {
+                if(confirmFlag){
+                    person.extraAmount = (double) values[0];
+                    atuoAssign();
+                    adapter.notifyDataSetChanged();
+                }
+            }
+        });
+        dialog.show(activity.getSupportFragmentManager(),"input");
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -162,13 +181,20 @@ public class AssignFragment extends Fragment {
             @Override
             public void bindData(final MyViewHolder myViewHolder, final Person data) {
                 myViewHolder.setText(R.id.nameTextView, data.getName());
-                myViewHolder.setText(R.id.assignAmountTextView, "当前分配：" + data.assignAmout);
-                myViewHolder.setText(R.id.offDays, "请假：" + data.offDays);
+                String amountText = data.extraAmount > 0?data.assignAmout+" + "+data.extraAmount:""+data.assignAmout;
+                myViewHolder.setText(R.id.assignAmountTextView, amountText);
+                myViewHolder.setText(R.id.offDays, "请假：" + data.offDays+"天");
                 myViewHolder.setText(R.id.assignRatio, "分配系数：" + data.assignRatio);
                 myViewHolder.getView(R.id.offDays).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         inputOffDays(data);
+                    }
+                });
+                myViewHolder.getView(R.id.inputExtraAmountView).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        inputExtraAmount(data);
                     }
                 });
             }
@@ -235,8 +261,6 @@ public class AssignFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
-        recyclerView.addItemDecoration(new MyDivideItemDecoration());
-
         TextView textView = view.findViewById(R.id.totalAmountTextView);
         String s = "总金额：" + totalAmount;
         textView.setText(s);

@@ -39,8 +39,9 @@ public class ShowRemainDetailsPop extends PopupWindow {
         Point point = new Point();
         activity.getWindowManager().getDefaultDisplay().getRealSize(point);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        setWidth((int) (point.x * 0.9));
-        setHeight((int) (point.y*0.9));
+        setWidth(LinearLayout.LayoutParams.MATCH_PARENT);
+        setHeight((int) (point.y*0.8));
+        setAnimationStyle(R.style.PopwindowAnimBottomTop);
     }
 
     private void initial() {

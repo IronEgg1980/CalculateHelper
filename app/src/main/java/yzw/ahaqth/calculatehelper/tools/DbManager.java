@@ -772,16 +772,18 @@ public abstract class DbManager {
                 }
                 personName = assignDetails.getPersonName();
                 amount = BigDecimalHelper.add(amount, assignDetails.getAssignAmount());
-                monthList.append("、")
-                        .append(assignDetails.getMonth().format(DateUtils.getYyyyM_Formatter()));
+                monthList.append("\n")
+                        .append(assignDetails.getMonth().format(DateUtils.getYyyyM_Formatter()))
+                        .append(" : ")
+                        .append(assignDetails.getAssignAmount());
 
-                if(!TextUtils.isEmpty(assignDetails.getNote()))
-                    monthList.append(assignDetails.getNote());
+                if(!TextUtils.isEmpty(assignDetails.getNote())) {
+                    monthList.append(" ( ")
+                            .append(assignDetails.getNote())
+                            .append(" )");
+                }
 
-                monthList.append("（")
-                        .append(assignDetails.getAssignAmount())
-                        .append("）");
-                if (BigDecimalHelper.compare(assignDetails.getOffDays(), 0) > 0) {
+                if (assignDetails.getOffDays() > 0) {
                     offDaysNote.append("、")
                             .append(assignDetails.getMonth().format(DateUtils.getYyyyM_Formatter()))
                             .append("缺勤 ")

@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
-import android.util.SparseBooleanArray;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,11 +34,12 @@ public class SelectPersonPopWindow extends PopupWindow {
         activity.getWindowManager().getDefaultDisplay().getRealSize(point);
         setView(LayoutInflater.from(activity), new LinearLayout(activity));
         setWidth(ViewGroup.LayoutParams.MATCH_PARENT);
-        setHeight((int) (point.y * 0.8));
+        setHeight((int) (point.y * 0.7));
         setOutsideTouchable(true);
         setTouchable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         setFocusable(true);
+        setAnimationStyle(R.style.PopwindowAnimBottomTop);
     }
 
     public void show() {
@@ -80,7 +80,7 @@ public class SelectPersonPopWindow extends PopupWindow {
     public void setView(LayoutInflater inflater, final ViewGroup container) {
         mList = DbManager.findAll(Person.class);
 
-        View view = inflater.inflate(R.layout.dialog_select_person, container, false);
+        View view = inflater.inflate(R.layout.popwindow_select_person, container, false);
         final MyAdapter<Person> adapter = new MyAdapter<Person>(mList) {
             @Override
             public void bindData(MyViewHolder myViewHolder, final Person data) {

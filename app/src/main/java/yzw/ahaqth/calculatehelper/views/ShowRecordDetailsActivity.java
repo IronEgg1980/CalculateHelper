@@ -71,7 +71,7 @@ public class ShowRecordDetailsActivity extends AppCompatActivity {
             public void bindData(MyViewHolder myViewHolder, AssignGroupByPerson data) {
                 myViewHolder.setText(R.id.monthTextView, data.getPersonName());
                 myViewHolder.setText(R.id.amountTextView, "总金额：" + data.getAssignAmount());
-                myViewHolder.setText(R.id.noteTextView, "明细：" + data.getMonthList());
+                myViewHolder.setText(R.id.noteTextView, data.getMonthList());
                 myViewHolder.setText(R.id.datamodeTextView, data.getOffDaysNote());
             }
         };

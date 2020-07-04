@@ -2,7 +2,6 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:background="@drawable/select_month_item_shape"
     android:layout_margin="8dp"
     android:layout_width="match_parent"
@@ -14,10 +13,10 @@
         android:layout_height="40dp"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
-        android:gravity="center_vertical"
+        android:gravity="bottom"
         android:text="名称"
         android:textSize="@dimen/TextSize_M"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/assignRatio"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -25,33 +24,58 @@
         android:id="@+id/assignRatio"
         android:layout_width="wrap_content"
         android:layout_height="40dp"
-        android:layout_marginStart="8dp"
-        android:gravity="center"
-        android:text="分配系数"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/nameTextView" />
+        android:layout_marginEnd="32dp"
+        android:gravity="bottom"
+        android:text="分配系数:1.0"
+        android:textSize="@dimen/TextSize_S"
+        app:layout_constraintEnd_toStartOf="@id/offDays"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/offDays"
         android:layout_width="wrap_content"
         android:layout_height="40dp"
         android:layout_marginEnd="8dp"
-        android:gravity="center"
-        android:text="缺勤天数"
+        android:gravity="bottom"
+        android:text="缺勤天数:0"
+        android:textSize="@dimen/TextSize_S"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/nameTextView" />
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <ImageView
+        android:id="@+id/inputExtraAmountView"
+        android:layout_width="wrap_content"
+        android:layout_height="64dp"
+        android:layout_marginEnd="8dp"
+        android:padding="16dp"
+        android:src="@drawable/edit"
+        android:scaleType="fitCenter"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/nameTextView" />
+
+    <TextView
+        android:id="@+id/textview1"
+        android:layout_width="0dp"
+        android:layout_height="64dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:gravity="center_vertical"
+        android:text="金额："
+        android:textSize="@dimen/TextSize_S"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/nameTextView" />
 
     <TextView
         android:id="@+id/assignAmountTextView"
         android:layout_width="0dp"
-        android:layout_height="40dp"
-        android:layout_marginStart="8dp"
+        android:layout_height="64dp"
         android:layout_marginEnd="8dp"
         android:gravity="center_vertical"
+        android:textColor="@android:color/holo_blue_dark"
         android:text="9999"
-        android:textSize="@dimen/TextSize_S"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/assignRatio" />
+        android:textSize="@dimen/TextSize_XL"
+        app:layout_constraintEnd_toStartOf="@id/inputExtraAmountView"
+        app:layout_constraintStart_toEndOf="@id/textview1"
+        app:layout_constraintTop_toBottomOf="@+id/nameTextView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

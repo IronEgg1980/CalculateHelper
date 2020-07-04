@@ -62,4 +62,9 @@
         <item name="android:paddingStart">32dp</item>
         <item name="android:paddingEnd">32dp</item>
     </style>
+
+    <style name="PopwindowAnimBottomTop">
+        <item name="android:windowEnterAnimation">@anim/popwindow_bottom2top</item>
+        <item name="android:windowExitAnimation">@anim/popwindow_top2bottom</item>
+    </style>
 </resources>
